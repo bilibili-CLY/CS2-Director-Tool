@@ -1,0 +1,54 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 彼岸花（Lycoris）Material Design 调色板 -->
+
+    <!-- 主色（彼岸花红） -->
+    <Color x:Key="PrimaryColor">#C41E3A</Color>
+    <Color x:Key="PrimaryHoverColor">#D93A54</Color>
+    <Color x:Key="PrimaryPressedColor">#A0172F</Color>
+    <Color x:Key="PrimaryDisabledColor">#5A3A40</Color>
+    <Color x:Key="AccentColor">#FFD700</Color>
+    <Color x:Key="TextOnPrimaryColor">#FFFFFF</Color>
+
+    <!-- 表面与背景 -->
+    <Color x:Key="BackgroundColor">#141414</Color>
+    <Color x:Key="SidebarColor">#191919</Color>
+    <Color x:Key="SurfaceColor">#1F1F1F</Color>
+    <Color x:Key="SurfaceBorderColor">#2E2E2E</Color>
+    <Color x:Key="InputBackgroundColor">#161616</Color>
+    <Color x:Key="HoverColor">#2A2A2A</Color>
+    <Color x:Key="SidebarSelectedBackgroundColor">#26C41E3A</Color>
+
+    <!-- 文字 -->
+    <Color x:Key="TextPrimaryColor">#ECECEC</Color>
+    <Color x:Key="TextSecondaryColor">#9E9E9E</Color>
+    <Color x:Key="TextDisabledColor">#5C5C5C</Color>
+
+    <!-- 状态色 -->
+    <Color x:Key="SuccessColor">#66BB6A</Color>
+    <Color x:Key="ErrorColor">#EF5350</Color>
+    <Color x:Key="WarningColor">#FFC107</Color>
+
+    <!-- 画刷 -->
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}" />
+    <SolidColorBrush x:Key="PrimaryHoverBrush" Color="{StaticResource PrimaryHoverColor}" />
+    <SolidColorBrush x:Key="PrimaryPressedBrush" Color="{StaticResource PrimaryPressedColor}" />
+    <SolidColorBrush x:Key="PrimaryDisabledBrush" Color="{StaticResource PrimaryDisabledColor}" />
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="TextOnPrimaryBrush" Color="{StaticResource TextOnPrimaryColor}" />
+    <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />
+    <SolidColorBrush x:Key="SidebarBrush" Color="{StaticResource SidebarColor}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="SurfaceBorderBrush" Color="{StaticResource SurfaceBorderColor}" />
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="{StaticResource InputBackgroundColor}" />
+    <SolidColorBrush x:Key="HoverBrush" Color="{StaticResource HoverColor}" />
+    <SolidColorBrush x:Key="SidebarSelectedBackgroundBrush" Color="{StaticResource SidebarSelectedBackgroundColor}" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
+    <SolidColorBrush x:Key="TextDisabledBrush" Color="{StaticResource TextDisabledColor}" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
+    <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource ErrorColor}" />
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
+
+</ResourceDictionary>

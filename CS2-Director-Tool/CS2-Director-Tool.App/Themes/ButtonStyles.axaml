@@ -1,0 +1,105 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 基础深色按钮 -->
+    <Style Selector="Button.btn">
+        <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource SurfaceBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="16,6" />
+        <Setter Property="MinHeight" Value="38" />
+        <Setter Property="MinWidth" Value="88" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="RenderTransform" Value="none" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="root"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}">
+                    <ContentPresenter Name="PART_ContentPresenter"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                      Margin="{TemplateBinding Padding}"
+                                      TextElement.Foreground="{TemplateBinding Foreground}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^ /template/ Border#root">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="^">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.08" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="^:pointerover /template/ Border#root">
+            <Setter Property="Background" Value="#2A2A2A" />
+            <Setter Property="BorderBrush" Value="#3D3D3D" />
+        </Style>
+        <Style Selector="^:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.96)" />
+            <Setter Property="Background" Value="#232323" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Foreground" Value="{StaticResource TextDisabledBrush}" />
+            <Setter Property="Background" Value="#1A1A1A" />
+            <Setter Property="BorderBrush" Value="#242424" />
+            <Setter Property="Cursor" Value="Arrow" />
+        </Style>
+    </Style>
+
+    <!-- 主色（彼岸花红）按钮 -->
+    <Style Selector="Button.btn.btn-primary">
+        <Setter Property="Background" Value="{StaticResource PrimaryBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TextOnPrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+        <Style Selector="^:pointerover /template/ Border#root">
+            <Setter Property="Background" Value="#D93A54" />
+            <Setter Property="BorderBrush" Value="#D93A54" />
+        </Style>
+        <Style Selector="^:pressed /template/ Border#root">
+            <Setter Property="Background" Value="#A0172F" />
+            <Setter Property="BorderBrush" Value="#A0172F" />
+        </Style>
+        <Style Selector="^:disabled /template/ Border#root">
+            <Setter Property="Background" Value="#5A3A40" />
+            <Setter Property="BorderBrush" Value="#5A3A40" />
+        </Style>
+    </Style>
+
+    <!-- 强调色（金色）按钮 -->
+    <Style Selector="Button.btn.btn-accent">
+        <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+        <Setter Property="Foreground" Value="#1A1A1A" />
+        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Style Selector="^:pointerover /template/ Border#root">
+            <Setter Property="Background" Value="#FFE44D" />
+            <Setter Property="BorderBrush" Value="#FFE44D" />
+        </Style>
+        <Style Selector="^:pressed /template/ Border#root">
+            <Setter Property="Background" Value="#C9A800" />
+            <Setter Property="BorderBrush" Value="#C9A800" />
+        </Style>
+        <Style Selector="^:disabled /template/ Border#root">
+            <Setter Property="Background" Value="#4A4A4A" />
+        </Style>
+    </Style>
+
+</Styles>

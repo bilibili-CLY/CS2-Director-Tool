@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CS2_Director_Tool.App.ViewModels"
+             x:Class="CS2_Director_Tool.App.Views.PlayerRenamePage"
+             x:DataType="vm:PlayerRenameViewModel">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,28">
+            <TextBlock Text="玩家改名" Classes="page-title" />
+            <TextBlock Text="将游戏内所有玩家名修改为网站登记的名字" Classes="page-subtitle" />
+
+            <Border Classes="card">
+                <StackPanel>
+                    <Button Content="获取命令" Command="{Binding GetCommandsCommand}"
+                            Classes="btn btn-primary"
+                            HorizontalAlignment="Left" />
+                    <TextBlock Text="{Binding Status}" Classes="label-text"
+                               Margin="0,16,0,0" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

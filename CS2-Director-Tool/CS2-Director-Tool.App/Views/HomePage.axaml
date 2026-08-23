@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CS2_Director_Tool.App.ViewModels"
+             x:Class="CS2_Director_Tool.App.Views.HomePage"
+             x:DataType="vm:HomeViewModel">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,28">
+            <TextBlock Text="主 页" Classes="page-title" />
+            <TextBlock Text="配置 CS2 / FFmpeg / OBS Studio" Classes="page-subtitle" />
+
+            <Border Classes="card">
+                <StackPanel>
+                    <TextBlock Text="CS2 路径" Classes="section-title" />
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <TextBox Grid.Column="0" Text="{Binding Cs2Path}"
+                                 Classes="input" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <Button Grid.Column="1" Content="浏览" Command="{Binding BrowseCs2Command}"
+                                Classes="btn" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <Button Grid.Column="2" Content="{Binding GsiInstallButtonText}" Command="{Binding InstallGsiCommand}"
+                                Classes="btn btn-primary" VerticalAlignment="Center" />
+                    </Grid>
+                    <TextBlock Text="{Binding GsiStatus}" Classes="caption-text" Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel>
+                    <TextBlock Text="FFmpeg 路径" Classes="section-title" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Grid.Column="0" Text="{Binding FfmpegPath}"
+                                 Classes="input" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <Button Grid.Column="1" Content="浏览" Command="{Binding BrowseFfmpegCommand}"
+                                Classes="btn" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel>
+                    <TextBlock Text="OBS Studio WebSocket" Classes="section-title" />
+                    <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,16"
+                          RowDefinitions="Auto,Auto,Auto">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="IP:" Classes="label-text"
+                                   Margin="0,0,12,12" Width="64" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ObsAddress}"
+                                 Classes="input" Margin="0,0,0,12" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="端口:" Classes="label-text"
+                                   Margin="0,0,12,12" Width="64" />
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ObsPort}"
+                                 Classes="input" Margin="0,0,0,12" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="密码:" Classes="label-text"
+                                   Margin="0,0,12,0" Width="64" />
+                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="ObsPasswordBox"
+                                 Classes="input" PasswordChar="●"
+                                 LostFocus="ObsPasswordBox_LostFocus" />
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*">
+                        <Button Grid.Column="0" Content="{Binding ConnectButtonText}" Command="{Binding ToggleObsCommand}"
+                                Classes="btn btn-primary" Margin="0,0,12,0" />
+                        <TextBlock Grid.Column="1" Text="{Binding ObsStatus}" Classes="label-text" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

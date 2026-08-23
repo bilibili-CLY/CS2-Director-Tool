@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CS2_Director_Tool.App.ViewModels"
+             x:Class="CS2_Director_Tool.App.Views.KillReplayPage"
+             x:DataType="vm:KillReplayViewModel">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,28">
+            <TextBlock Text="局内击杀回放" Classes="page-title" />
+            <TextBlock Text="自动记录击杀并生成回放片段" Classes="page-subtitle" />
+
+            <Border Classes="card">
+                <StackPanel>
+                    <CheckBox Content="启用击杀回放" IsChecked="{Binding IsKillReplayEnabled}"
+                              Classes="toggle" />
+                    <Grid ColumnDefinitions="Auto,*" Margin="0,16,0,0"
+                          IsEnabled="{Binding IsKillReplayEnabled}">
+                        <TextBlock Grid.Column="0" Text="{Binding Status}"
+                                   Classes="label-text"
+                                   Margin="0,0,12,0" TextWrapping="Wrap" />
+                        <ProgressBar Grid.Column="1" Value="{Binding Progress}" Maximum="100" Minimum="0"
+                                     Height="4"
+                                     Foreground="{StaticResource PrimaryBrush}"
+                                     Background="{StaticResource SurfaceBrush}"
+                                     IsVisible="{Binding IsProcessing}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto"
+                      IsEnabled="{Binding IsKillReplayEnabled}">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="游戏场景:" Classes="label-text"
+                               Margin="0,0,12,12" Width="88" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding GameSceneName}"
+                             Classes="input" Margin="0,0,0,12" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="回放场景:" Classes="label-text"
+                               Margin="0,0,12,12" Width="88" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ReplaySceneName}"
+                             Classes="input" Margin="0,0,0,12" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="回放媒体源:" Classes="label-text"
+                               Margin="0,0,12,0" Width="88" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ReplaySourceName}"
+                             Classes="input" />
+                </Grid>
+            </Border>
+
+            <!-- 诊断日志控制台 -->
+            <Border Classes="card">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+                        <TextBlock Grid.Column="0" Text="日志" Classes="section-title" Margin="0"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Content="清空" Command="{Binding ClearLogCommand}"
+                                Padding="14,6" Classes="btn" />
+                    </Grid>
+                    <TextBox Grid.Row="1" x:Name="LogTextBox"
+                             Text="{Binding LogText}"
+                             IsReadOnly="True"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             Height="260"
+                             Padding="10,8"
+                             Background="{StaticResource InputBackgroundBrush}"
+                             BorderBrush="{StaticResource SurfaceBorderBrush}"
+                             FontFamily="Consolas, Menlo, monospace"
+                             FontSize="12"
+                             Foreground="{StaticResource TextSecondaryBrush}"
+                             Classes="input" />
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

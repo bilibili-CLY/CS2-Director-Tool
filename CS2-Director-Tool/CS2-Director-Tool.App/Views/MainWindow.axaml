@@ -1,0 +1,43 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:CS2_Director_Tool.App.ViewModels"
+        xmlns:m="using:CS2_Director_Tool.App.Models"
+        xmlns:v="using:CS2_Director_Tool.App.Views"
+        x:Class="CS2_Director_Tool.App.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="CS2导播工具" Height="720" Width="1200"
+        MinHeight="480" MinWidth="800"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BackgroundBrush}">
+    <Grid ColumnDefinitions="180,*">
+        <Border Grid.Column="0" Classes="sidebar">
+            <DockPanel>
+                <Border DockPanel.Dock="Top" Padding="20,28,20,20">
+                    <StackPanel>
+                        <TextBlock Text="CS2导播工具" FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="CS2 Director Tool" FontSize="10" FontWeight="Medium" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+                <Border DockPanel.Dock="Top" Height="1" Background="{StaticResource SurfaceBorderBrush}" />
+                <ItemsControl Margin="0,12,0,0" ItemsSource="{Binding TabList}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="m:TabItem">
+                            <Button Classes="sidebar-tab"
+                                    Classes.selected="{Binding IsSelected}"
+                                    Command="{Binding $parent[v:MainWindow].((vm:MainViewModel)DataContext).SelectTabCommand}"
+                                    CommandParameter="{Binding}"
+                                    Content="{Binding Title}"
+                                    HorizontalAlignment="Stretch"
+                                    IsEnabled="{Binding IsEnabled}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+        </Border>
+        <TransitioningContentControl Grid.Column="1" Content="{Binding SelectedTab.Content}" Margin="0">
+            <TransitioningContentControl.PageTransition>
+                <CrossFade Duration="0:0:0.25" />
+            </TransitioningContentControl.PageTransition>
+        </TransitioningContentControl>
+    </Grid>
+</Window>
