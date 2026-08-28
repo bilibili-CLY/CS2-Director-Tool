@@ -52,7 +52,35 @@ public class ReplayWorkflowService : IReplayWorkflowService
             RefreshPrerequisites();
         };
 
+        _ffmpegService.OnClippingComplete += ClippingCompleteHandler;
+
         RefreshPrerequisites();
+    }
+
+    private async void ClippingCompleteHandler(object? sender, ClippingCompletedEventArgs e)
+    {
+        if (!_isRoundEnding || _isReplayPlaying)
+            return;
+
+        try
+        {
+            if (e is null || string.IsNullOrEmpty(e.FilePath) || !File.Exists(e.FilePath))
+            {
+                _log.Log(LogCategory.Replay, "错误: 剪辑文件不存在");
+                return;
+            }
+
+            _log.Log(LogCategory.Replay, "剪辑完成，开始播放回放");
+            await PlayReplayAsync(e.FilePath, e.Duration);
+        }
+        catch (Exception ex)
+        {
+            _log.Log(LogCategory.Replay, $"回放失败: {ex.Message}");
+        }
+        finally
+        {
+            _isRoundEnding = false;
+        }
     }
 
     /// <inheritdoc/>
@@ -91,6 +119,14 @@ public class ReplayWorkflowService : IReplayWorkflowService
         if (!_canBeActive)
         {
             _log.Log(LogCategory.Replay, "回合开始：前置条件不满足，跳过录制");
+            return false;
+        }
+
+        // freezetime -> live 会触发两次本方法；一个回合只初始化一次，
+        // 防止中途重启录制并清空/错位击杀时间戳。
+        if (_isInRound)
+        {
+            _log.Log(LogCategory.Replay, "回合开始事件已处理过，跳过本次触发");
             return false;
         }
 
@@ -146,7 +182,8 @@ public class ReplayWorkflowService : IReplayWorkflowService
     /// <inheritdoc/>
     public async Task GenerateReplayAsync()
     {
-        if (!_isInRound || !_canBeActive)
+        // map.round 递增与 round.phase=over 都可能触发本方法；只处理一次。
+        if (!_isInRound || !_canBeActive || _isRoundEnding)
             return;
 
         _isInRound = false;
@@ -164,6 +201,7 @@ public class ReplayWorkflowService : IReplayWorkflowService
             if (timestamps.Length == 0)
             {
                 _log.Log(LogCategory.Replay, "回合结束，无击杀镜头");
+                _isRoundEnding = false;
                 return;
             }
 
@@ -190,6 +228,7 @@ public class ReplayWorkflowService : IReplayWorkflowService
             catch (Exception ex)
             {
                 _log.Log(LogCategory.Replay, $"停止录制失败: {ex.Message}");
+                _isRoundEnding = false;
                 return;
             }
             _recordingActive = false;
@@ -198,6 +237,7 @@ public class ReplayWorkflowService : IReplayWorkflowService
             if (string.IsNullOrEmpty(recordingPath) || !File.Exists(recordingPath))
             {
                 _log.Log(LogCategory.Replay, "错误: 找不到录制文件");
+                _isRoundEnding = false;
                 return;
             }
 
@@ -219,32 +259,15 @@ public class ReplayWorkflowService : IReplayWorkflowService
             string outputFile = Path.Combine(outputDir, $"replay_{DateTime.Now:yyyyMMddHHmmss}.mp4");
 
             _log.Log(LogCategory.Replay, $"开始剪辑 {clips.Count} 个片段 -> {outputFile}");
-            var clipTask = _ffmpegService.ClipAndConcatAsync(recordingPath, outputFile, clips,
+            // 剪辑完成后 FfmpegService 会抛出 OnClippingComplete，由
+            // ClippingCompleteHandler 负责播放并在此后清除 _isRoundEnding。
+            await _ffmpegService.ClipAndConcatAsync(recordingPath, outputFile, clips,
                 _settingsService.FfmpegPath);
-            await clipTask;
-
-            var duration = await GetClipDurationAsync(outputFile);
-            _log.Log(LogCategory.Replay, "剪辑完成，开始播放回放");
-            await PlayReplayAsync(outputFile, duration);        }
+        }
         catch (Exception ex)
         {
             _log.Log(LogCategory.Replay, $"处理失败: {ex.Message}");
-        }
-        finally
-        {
             _isRoundEnding = false;
-        }
-    }
-
-    private Task<TimeSpan> GetClipDurationAsync(string videoFile)
-    {
-        try
-        {
-            return _ffmpegService.GetVideoDurationAsync(videoFile, _settingsService.FfmpegPath);
-        }
-        catch
-        {
-            return Task.FromResult(TimeSpan.Zero);
         }
     }
 

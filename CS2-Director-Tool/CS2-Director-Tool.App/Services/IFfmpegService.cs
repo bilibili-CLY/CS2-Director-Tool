@@ -21,10 +21,6 @@ public interface IFfmpegService
     Task ClipAndConcatAsync(string inputFile, string outputFile, IReadOnlyList<ClipSegment> clips,
         string ffmpegPath, CancellationToken cancellationToken = default);
 
-    /// <summary>查询视频文件的实际时长；无法获取时返回 <see cref="TimeSpan.Zero"/>。</summary>
-    Task<TimeSpan> GetVideoDurationAsync(string videoFile, string ffmpegPath,
-        CancellationToken cancellationToken = default);
-
     /// <summary>剪辑进度更新时发生（0~100）。</summary>
     event EventHandler<double> OnClippingProgress;
 

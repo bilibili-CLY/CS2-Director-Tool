@@ -295,13 +295,7 @@ public class FfmpegService : IFfmpegService
         return segmentDuration <= 0 ? 0 : Math.Min(currentTime / segmentDuration, 1.0);
     }
 
-    public Task<TimeSpan> GetVideoDurationAsync(string videoFile, string ffmpegPath,
-        CancellationToken cancellationToken = default)
-    {
-        return GetVideoDurationStaticAsync(ffmpegPath, videoFile, cancellationToken);
-    }
-
-    private static async Task<TimeSpan> GetVideoDurationStaticAsync(string ffmpegPath, string videoFile,
+    private static async Task<TimeSpan> GetVideoDurationAsync(string ffmpegPath, string videoFile,
         CancellationToken cancellationToken)
     {
         try
