@@ -1,20 +1,99 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:CS2_Director_Tool.App.ViewModels"
+             xmlns:m="using:CS2_Director_Tool.App.Models"
              x:Class="CS2_Director_Tool.App.Views.PlayerRenamePage"
              x:DataType="vm:PlayerRenameViewModel">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="32,28">
+        <StackPanel Margin="32,28" Spacing="16">
+
             <TextBlock Text="玩家改名" Classes="page-title" />
             <TextBlock Text="将游戏内所有玩家名修改为网站登记的名字" Classes="page-subtitle" />
 
+            <!-- 操作按钮区 -->
             <Border Classes="card">
-                <StackPanel>
-                    <Button Content="获取命令" Command="{Binding GetCommandsCommand}"
-                            Classes="btn btn-primary"
-                            HorizontalAlignment="Left" />
-                    <TextBlock Text="{Binding Status}" Classes="label-text"
-                               Margin="0,16,0,0" TextWrapping="Wrap" />
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Content="发现玩家" Command="{Binding DiscoverPlayersCommand}"
+                                Classes="btn btn-primary" />
+                        <Button Content="生成改名命令" Command="{Binding GenerateCommandsCommand}"
+                                Classes="btn" IsVisible="{Binding HasPlayers}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Status}" Classes="label-text" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!-- 玩家列表区 -->
+            <Border Classes="card" IsVisible="{Binding HasPlayers}">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                        <!-- 恐怖分子（T） -->
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="恐怖分子（T）" Classes="label-text" Margin="0,0,0,8" />
+                            <ListBox ItemsSource="{Binding TTeamPlayers}" Background="Transparent"
+                                     BorderThickness="0" MinHeight="120" MaxHeight="260">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="m:GsiPlayerInfo">
+                                        <StackPanel Margin="2,3" Spacing="1">
+                                            <TextBlock Text="{Binding DisplayName}" Classes="label-text" />
+                                            <TextBlock Text="{Binding SteamId}" Classes="label-text"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+
+                        <!-- 反恐精英（CT） -->
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="反恐精英（CT）" Classes="label-text" Margin="0,0,0,8" />
+                            <ListBox ItemsSource="{Binding CTTeamPlayers}" Background="Transparent"
+                                     BorderThickness="0" MinHeight="120" MaxHeight="260">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="m:GsiPlayerInfo">
+                                        <StackPanel Margin="2,3" Spacing="1">
+                                            <TextBlock Text="{Binding DisplayName}" Classes="label-text" />
+                                            <TextBlock Text="{Binding SteamId}" Classes="label-text"
+                                                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 未知队伍玩家 -->
+                    <StackPanel IsVisible="{Binding HasNoTeam}">
+                        <TextBlock Text="未知队伍" Classes="label-text" Margin="0,0,0,8" />
+                        <ListBox ItemsSource="{Binding NoTeamPlayers}" Background="Transparent"
+                                 BorderThickness="0" MinHeight="80" MaxHeight="200">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="m:GsiPlayerInfo">
+                                    <StackPanel Margin="2,3" Spacing="1">
+                                        <TextBlock Text="{Binding DisplayName}" Classes="label-text" />
+                                        <TextBlock Text="{Binding SteamId}" Classes="label-text"
+                                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 命令区 -->
+            <Border Classes="card" IsVisible="{Binding HasCommands}">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="改名命令" Classes="label-text" />
+                        <Button Grid.Column="1" Content="复制命令" Command="{Binding CopyCommand}"
+                                Classes="btn btn-primary" />
+                    </Grid>
+                    <TextBox Text="{Binding CommandText}"
+                             TextWrapping="Wrap" AcceptsReturn="True" IsReadOnly="True"
+                             FontFamily="Consolas, Menlo, monospace" FontSize="12"
+                             MinHeight="140" MaxHeight="300"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto" Classes="input" />
                 </StackPanel>
             </Border>
         </StackPanel>

@@ -1,0 +1,60 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CS2_Director_Tool.App.ViewModels"
+             xmlns:m="using:CS2_Director_Tool.App.Models"
+             x:Class="CS2_Director_Tool.App.Views.LogPage"
+             x:DataType="vm:LogViewModel">
+    <Grid Margin="32,28" RowDefinitions="Auto,Auto,*">
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="日志" Classes="page-title" />
+            <TextBlock Text="集中查看 GSI / OBS / FFmpeg 及各功能操作日志，支持按类别、时间范围与内容筛选"
+                       Classes="page-subtitle" />
+        </StackPanel>
+
+        <!-- 筛选工具栏 -->
+        <Border Grid.Row="1" Classes="card">
+            <Grid ColumnDefinitions="Auto,170,Auto,210,Auto,210,Auto,*,Auto"
+                  ColumnSpacing="10">
+                <TextBlock Grid.Column="0" Text="类别:" Classes="label-text" />
+                <ComboBox Grid.Column="1" MinHeight="38"
+                          ItemsSource="{Binding CategoryOptions}"
+                          SelectedItem="{Binding SelectedCategory}" />
+                <TextBlock Grid.Column="2" Text="开始:" Classes="label-text" />
+                <TextBox Grid.Column="3" Text="{Binding StartTimeText}"
+                         Watermark="yyyy-MM-dd HH:mm:ss" Classes="input" />
+                <TextBlock Grid.Column="4" Text="结束:" Classes="label-text" />
+                <TextBox Grid.Column="5" Text="{Binding EndTimeText}"
+                         Watermark="yyyy-MM-dd HH:mm:ss" Classes="input" />
+                <TextBlock Grid.Column="6" Text="搜索:" Classes="label-text" />
+                <TextBox Grid.Column="7" Text="{Binding SearchText}"
+                         Watermark="搜索日志内容..." Classes="input" />
+                <Button Grid.Column="8" Content="清空" Command="{Binding ClearCommand}"
+                        Padding="14,6" Classes="btn" />
+            </Grid>
+        </Border>
+
+        <!-- 日志列表 -->
+        <Border Grid.Row="2" Classes="card" Padding="10">
+            <ListBox x:Name="LogList"
+                     ItemsSource="{Binding Entries}"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     FontFamily="Consolas, Menlo, monospace"
+                     FontSize="12">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="m:LogEntry">
+                        <TextBlock TextWrapping="Wrap" LineHeight="18" Margin="2,1">
+                            <Run Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}"
+                                 Foreground="{StaticResource TextSecondaryBrush}" />
+                            <Run Text=" [" Foreground="{StaticResource TextSecondaryBrush}" />
+                            <Run Text="{Binding Category}" Foreground="{StaticResource AccentBrush}" />
+                            <Run Text="] " Foreground="{StaticResource TextSecondaryBrush}" />
+                            <Run Text="{Binding Message}" Foreground="{StaticResource TextPrimaryBrush}" />
+                        </TextBlock>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+    </Grid>
+</UserControl>

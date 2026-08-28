@@ -17,6 +17,7 @@ public partial class HomeViewModel : ViewModelBase
     private readonly ICs2InstallService _cs2Install;
     private readonly IObsService _obs;
     private readonly IFfmpegService _ffmpeg;
+    private readonly ILogService _log;
 
     private string _cs2Path = string.Empty;
     private string _ffmpegPath = string.Empty;
@@ -152,12 +153,13 @@ public partial class HomeViewModel : ViewModelBase
     public IAsyncRelayCommand ToggleObsCommand => _toggleObsCommand;
 
     public HomeViewModel(ISettingsService settings, ICs2InstallService cs2Install, IObsService obs,
-        IFfmpegService ffmpeg)
+        IFfmpegService ffmpeg, ILogService log)
     {
         _settings = settings;
         _cs2Install = cs2Install;
         _obs = obs;
         _ffmpeg = ffmpeg;
+        _log = log;
 
         BrowseCs2Command = new AsyncRelayCommand(BrowseCs2Async);
         BrowseFfmpegCommand = new AsyncRelayCommand(BrowseFfmpegAsync);
@@ -205,41 +207,56 @@ public partial class HomeViewModel : ViewModelBase
     {
         var path = await PickFileAsync();
         if (!string.IsNullOrEmpty(path))
+        {
             Cs2Path = path;
+            _log.Log(LogCategory.Home, $"已选择 CS2 路径: {path}");
+        }
     }
 
     private async Task BrowseFfmpegAsync()
     {
         var path = await PickFileAsync();
         if (!string.IsNullOrEmpty(path))
+        {
             FfmpegPath = path;
+            _log.Log(LogCategory.Home, $"已选择 ffmpeg 路径: {path}");
+        }
     }
 
+    /// <summary>
+    /// 安装 GSI 配置文件
+    /// </summary>
     private async Task InstallGsiAsync()
     {
         if (string.IsNullOrEmpty(Cs2Path))
         {
             GsiStatus = "错误: 请先填写 CS2 路径";
+            _log.Log(LogCategory.Home, "安装 GSI 失败: 未填写 CS2 路径");
             return;
         }
 
+        // 获取内嵌的 GSI 配置文件内容
         var content = LoadEmbeddedGsiConfig();
         if (content is null)
         {
             GsiStatus = "错误: 找不到内嵌的 GSI 配置文件";
+            _log.Log(LogCategory.Home, "安装 GSI 失败: 找不到内嵌的 GSI 配置文件");
             return;
         }
 
+        // 获取 CS2 cfg 目录
         var destPath = _cs2Install.InstallGsiConfig(Cs2Path, content);
         if (destPath is null)
         {
             GsiStatus = "错误: 无法定位 CS2 cfg 目录，请检查 CS2 路径";
             IsGsiInstalled = false;
+            _log.Log(LogCategory.Home, "安装 GSI 失败: 无法定位 CS2 cfg 目录");
             return;
         }
 
         IsGsiInstalled = true;
         GsiStatus = $"GSI 已安装: {destPath}";
+        _log.Log(LogCategory.Home, $"GSI 已安装到: {destPath}");
         RaisePrerequisitesChanged();
     }
 
@@ -254,10 +271,12 @@ public partial class HomeViewModel : ViewModelBase
                 ObsStatus = "未连接";
                 ObsConnectionChanged?.Invoke(this, false);
                 RaisePrerequisitesChanged();
+                _log.Log(LogCategory.Home, "已断开 OBS 连接");
             }
             catch (Exception ex)
             {
                 ObsStatus = $"断开失败: {ex.Message}";
+                _log.Log(LogCategory.Home, $"断开 OBS 失败: {ex.Message}");
             }
             return;
         }
@@ -266,11 +285,13 @@ public partial class HomeViewModel : ViewModelBase
         {
             ObsStatus = "连接中...";
             var url = ObsWebSocketUrlBuilder.Build(ObsAddress, ObsPort);
+            _log.Log(LogCategory.Home, $"正在连接 OBS: {url}");
             await _obs.ConnectAsync(url, ObsPassword);
             IsObsConnected = true;
             ObsStatus = "已连接";
             ObsConnectionChanged?.Invoke(this, true);
             RaisePrerequisitesChanged();
+            _log.Log(LogCategory.Home, "OBS 连接成功");
         }
         catch (Exception ex)
         {
@@ -278,12 +299,17 @@ public partial class HomeViewModel : ViewModelBase
             ObsStatus = $"连接失败: {ex.Message}";
             ObsConnectionChanged?.Invoke(this, false);
             RaisePrerequisitesChanged();
+            _log.Log(LogCategory.Home, $"OBS 连接失败: {ex.Message}");
         }
     }
 
+    /// <summary>
+    /// 从嵌入的资源中加载 GSI 配置文件内容。
+    /// </summary>
+    /// <returns>返回 GSI 配置文件内容，或 null 如果加载失败。</returns>
     private static string? LoadEmbeddedGsiConfig()
     {
-        const string resourceName = "CS2_Director_Tool.App.Resources.gsi_cfg.cfg";
+        const string resourceName = "CS2-Director-Tool.App.Resources.gsi_cfg.cfg";
         var assembly = Assembly.GetExecutingAssembly();
         using var stream = assembly.GetManifestResourceStream(resourceName);
         if (stream is null)

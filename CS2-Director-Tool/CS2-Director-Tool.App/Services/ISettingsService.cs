@@ -16,14 +16,14 @@ public interface ISettingsService
     /// <summary>获取或设置用于回放播放的媒体源名称。</summary>
     string ReplaySourceName { get; set; }
 
-    /// <summary>获取或设置是否启用暂停音乐功能。</summary>
-    bool PauseMusicEnabled { get; set; }
+    /// <summary>获取或设置是否启用事件动作功能。</summary>
+    bool EventActionEnabled { get; set; }
 
-    /// <summary>获取或设置暂停音乐使用的 OBS 媒体源名称。</summary>
-    string PauseMusicSourceName { get; set; }
+    /// <summary>获取或设置事件动作规则列表。</summary>
+    System.Collections.Generic.List<Models.EventActionRule> EventActionRules { get; set; }
 
-    /// <summary>获取或设置击杀时是否触发回放录制。</summary>
-    bool KillReplayEnabled { get; set; }
+    /// <summary>获取或设置事件动作规则的命名预设列表。</summary>
+    System.Collections.Generic.List<Models.EventActionPreset> EventActionPresets { get; set; }
 
     /// <summary>获取或设置玩家改名 API 的基础地址（可配置）。</summary>
     string PlayerApiBaseUrl { get; set; }

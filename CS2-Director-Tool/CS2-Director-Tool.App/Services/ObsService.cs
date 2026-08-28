@@ -20,6 +20,7 @@ namespace CS2_Director_Tool.App.Services;
 public class ObsService : IObsService, IDisposable
 {
     private readonly OBSWebsocket _obs = new OBSWebsocket();
+    private readonly ILogService _log;
 
     private bool _disposed;
 
@@ -33,12 +34,12 @@ public class ObsService : IObsService, IDisposable
 
     public event EventHandler? OnConnected;
     public event EventHandler? OnDisconnected;
-    public event EventHandler<string>? OnLog;
 
-    private void Log(string message) => Dispatcher.UIThread.Post(() => OnLog?.Invoke(this, message));
+    private void Log(string message) => _log.Log(LogCategory.Obs, message);
 
-    public ObsService()
+    public ObsService(ILogService log)
     {
+        _log = log;
         _obs.Connected += OnObsConnected;
         _obs.Disconnected += OnObsDisconnected;
         _obs.MediaInputPlaybackEnded += OnMediaInputPlaybackEnded;

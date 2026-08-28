@@ -21,12 +21,19 @@ public class FfmpegService : IFfmpegService
     private const int ExtractProcessTimeoutMs = 300_000;
     private const int ConcatProcessTimeoutMs = 600_000;
 
+    private readonly ILogService _log;
     private bool _isValid;
 
     public bool IsValid => _isValid;
 
     public event EventHandler<double>? OnClippingProgress;
     public event EventHandler<ClippingCompletedEventArgs>? OnClippingComplete;
+
+    /// <summary>初始化 <see cref="FfmpegService"/> 类的新实例。</summary>
+    public FfmpegService(ILogService log)
+    {
+        _log = log;
+    }
 
     public bool ValidatePath(string ffmpegPath)
     {
@@ -56,11 +63,15 @@ public class FfmpegService : IFfmpegService
 
             var success = process.ExitCode == 0;
             _isValid = success;
+            _log.Log(LogCategory.Ffmpeg, success
+                ? $"FFmpeg 路径校验通过: {ffmpegPath}"
+                : $"FFmpeg 路径校验失败（退出码 {process.ExitCode}）: {ffmpegPath}");
             return success;
         }
-        catch
+        catch (Exception ex)
         {
             _isValid = false;
+            _log.Log(LogCategory.Ffmpeg, $"FFmpeg 路径校验失败: {ex.Message}");
             return false;
         }
     }
@@ -87,6 +98,9 @@ public class FfmpegService : IFfmpegService
 
         var tempDir = Path.Combine(Path.GetTempPath(), "MajoCupDirector", "FfmpegClips", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDir);
+
+        _log.Log(LogCategory.Ffmpeg,
+            $"开始剪辑: {clips.Count} 个片段, 输入 {Path.GetFileName(inputFile)} -> 输出 {Path.GetFileName(outputFile)}");
 
         var tempClipFiles = new List<string>();
         string? concatFileList = null;
@@ -125,6 +139,8 @@ public class FfmpegService : IFfmpegService
                     });
 
                 processedDuration += clip.Duration;
+                _log.Log(LogCategory.Ffmpeg,
+                    $"片段 {i + 1}/{clips.Count} 提取完成: {Path.GetFileName(tempClipFile)} (开始 {clip.StartTime:0.###}s, 时长 {clip.Duration:0.###}s)");
 
                 var clipProgress = (double)(i + 1) / clips.Count * 100.0;
                 Dispatcher.UIThread.Post(() => OnClippingProgress?.Invoke(this, clipProgress));
@@ -151,6 +167,9 @@ public class FfmpegService : IFfmpegService
             var actualDuration = await GetVideoDurationAsync(ffmpegPath, outputFile, cancellationToken);
             if (actualDuration <= TimeSpan.Zero)
                 actualDuration = TimeSpan.FromSeconds(totalDuration);
+
+            _log.Log(LogCategory.Ffmpeg,
+                $"剪辑完成: {outputFile} (时长 {actualDuration:hh\\:mm\\:ss})");
 
             Dispatcher.UIThread.Post(() =>
                 OnClippingComplete?.Invoke(this, new ClippingCompletedEventArgs(outputFile, actualDuration)));
@@ -231,6 +250,7 @@ public class FfmpegService : IFfmpegService
                 if (waitResult == WaitHandle.WaitTimeout)
                 {
                     try { process.Kill(); } catch { }
+                    _log.Log(LogCategory.Ffmpeg, $"FFmpeg {operationName} 超时（{timeoutMs / 1000} 秒）");
                     throw new TimeoutException(
                         $"FFmpeg {operationName} timed out after {timeoutMs / 1000} seconds.");
                 }
@@ -240,6 +260,7 @@ public class FfmpegService : IFfmpegService
                 if (process.ExitCode != 0)
                 {
                     var error = stderrBuffer.ToString();
+                    _log.Log(LogCategory.Ffmpeg, $"FFmpeg {operationName} 失败（退出码 {process.ExitCode}）: {error}");
                     throw new InvalidOperationException(
                         $"FFmpeg {operationName} failed with exit code {process.ExitCode}.{Environment.NewLine}{error}");
                 }
@@ -274,7 +295,13 @@ public class FfmpegService : IFfmpegService
         return segmentDuration <= 0 ? 0 : Math.Min(currentTime / segmentDuration, 1.0);
     }
 
-    private static async Task<TimeSpan> GetVideoDurationAsync(string ffmpegPath, string videoFile,
+    public Task<TimeSpan> GetVideoDurationAsync(string videoFile, string ffmpegPath,
+        CancellationToken cancellationToken = default)
+    {
+        return GetVideoDurationStaticAsync(ffmpegPath, videoFile, cancellationToken);
+    }
+
+    private static async Task<TimeSpan> GetVideoDurationStaticAsync(string ffmpegPath, string videoFile,
         CancellationToken cancellationToken)
     {
         try

@@ -19,9 +19,6 @@ public interface IObsService
     /// <summary>与 OBS 断开连接时发生。</summary>
     event EventHandler OnDisconnected;
 
-    /// <summary>服务输出诊断消息时发生。</summary>
-    event EventHandler<string> OnLog;
-
     /// <summary>连接到 OBS WebSocket 服务器。</summary>
     Task ConnectAsync(string address, string password);
 

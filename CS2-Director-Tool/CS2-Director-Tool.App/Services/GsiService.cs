@@ -17,6 +17,7 @@ namespace CS2_Director_Tool.App.Services;
 /// </summary>
 public class GsiService : IGsiService, IDisposable
 {
+    private readonly ILogService _log;
     private HttpListener? _listener;
     private CancellationTokenSource? _cts;
     private Task? _listenTask;
@@ -27,6 +28,7 @@ public class GsiService : IGsiService, IDisposable
     private string? _previousMapPhase;
     private int? _previousMapRound;
     private bool _isGamePaused;
+    private string? _previousBombState;
 
     private static readonly HashSet<string> PausePhases = new HashSet<string>(StringComparer.Ordinal)
     {
@@ -39,7 +41,7 @@ public class GsiService : IGsiService, IDisposable
 
     private readonly Dictionary<string, int> _playerHealth = new Dictionary<string, int>();
     private readonly Dictionary<string, int> _playerKills = new Dictionary<string, int>();
-    private Dictionary<string, string> _playerNames = new Dictionary<string, string>();
+    private Dictionary<string, GsiPlayerInfo> _playerSnapshot = new Dictionary<string, GsiPlayerInfo>();
 
     private static readonly TimeSpan KillcamMatchWindow = TimeSpan.FromSeconds(1.5);
     private readonly List<PendingKill> _pendingKills = new List<PendingKill>();
@@ -55,9 +57,21 @@ public class GsiService : IGsiService, IDisposable
     public event EventHandler? OnRoundEnded;
     public event EventHandler? OnGamePaused;
     public event EventHandler? OnGameResumed;
-    public event EventHandler<string>? OnLog;
+    public event EventHandler? OnGameOver;
+    public event EventHandler? OnWarmupStarted;
+    public event EventHandler? OnWarmupOver;
+    public event EventHandler? OnBombPlanted;
+    public event EventHandler? OnBombDefused;
+    public event EventHandler? OnBombExploded;
+    public event EventHandler? OnPlayerDied;
 
-    private void Log(string message) => Dispatcher.UIThread.Post(() => OnLog?.Invoke(this, message));
+    private void Log(string message) => _log.Log(LogCategory.Gsi, message);
+
+    /// <summary>初始化 <see cref="GsiService"/> 类的新实例。</summary>
+    public GsiService(ILogService log)
+    {
+        _log = log;
+    }
 
     /// <summary>在 http://localhost:3000/ 上启动 GSI HTTP 监听器。</summary>
     public void Start()
@@ -179,6 +193,7 @@ public class GsiService : IGsiService, IDisposable
             ProcessMapPhase(result.Data!);
             ProcessRoundPhase(result.Data!);
             ProcessPausePhase(result.Data!);
+            ProcessBombState(result.Data!);
             return;
         }
 
@@ -245,12 +260,25 @@ public class GsiService : IGsiService, IDisposable
             if (!string.IsNullOrEmpty(phase) && _previousMapPhase != phase)
             {
                 Log($"map.phase: {_previousMapPhase ?? "(首包)"} -> {phase}");
+                var wasWarmup = _previousMapPhase == "warmup";
                 _previousMapPhase = phase;
                 if (phase == "live")
                 {
                     Dispatcher.UIThread.Post(() => OnMatchStarted?.Invoke(this, EventArgs.Empty));
                     _previousRoundPhase = null;
                     _previousMapRound = null;
+                }
+                else if (phase == "gameover")
+                {
+                    Dispatcher.UIThread.Post(() => OnGameOver?.Invoke(this, EventArgs.Empty));
+                }
+                else if (phase == "warmup")
+                {
+                    Dispatcher.UIThread.Post(() => OnWarmupStarted?.Invoke(this, EventArgs.Empty));
+                }
+                else if (wasWarmup)
+                {
+                    Dispatcher.UIThread.Post(() => OnWarmupOver?.Invoke(this, EventArgs.Empty));
                 }
             }
 
@@ -333,21 +361,57 @@ public class GsiService : IGsiService, IDisposable
         }
     }
 
+    private void ProcessBombState(JObject data)
+    {
+        var state = data["round"]?["bomb_state"]?.ToString();
+        if (string.IsNullOrEmpty(state))
+            return;
+
+        lock (_stateLock)
+        {
+            if (_previousBombState != state)
+            {
+                Log($"bomb_state: {_previousBombState ?? "(首包)"} -> {state}");
+                _previousBombState = state;
+
+                switch (state)
+                {
+                    case "planted":
+                        Dispatcher.UIThread.Post(() => OnBombPlanted?.Invoke(this, EventArgs.Empty));
+                        break;
+                    case "defused":
+                        Dispatcher.UIThread.Post(() => OnBombDefused?.Invoke(this, EventArgs.Empty));
+                        break;
+                    case "exploded":
+                        Dispatcher.UIThread.Post(() => OnBombExploded?.Invoke(this, EventArgs.Empty));
+                        break;
+                }
+            }
+        }
+    }
+
     private void ProcessPlayerNames(JObject data)
     {
         var allPlayers = data["allplayers"] as JObject;
         if (allPlayers is null)
             return;
 
-        var snapshot = new Dictionary<string, string>();
+        var snapshot = new Dictionary<string, GsiPlayerInfo>();
         foreach (var player in allPlayers.Properties())
         {
-            snapshot[player.Name] = player.Value["name"]?.ToString() ?? player.Name;
+            var name = player.Value["name"]?.ToString() ?? player.Name;
+            var team = player.Value["team"]?.ToString() ?? string.Empty;
+            snapshot[player.Name] = new GsiPlayerInfo
+            {
+                SteamId = player.Name,
+                Name = name,
+                Team = team
+            };
         }
 
         lock (_stateLock)
         {
-            _playerNames = snapshot;
+            _playerSnapshot = snapshot;
         }
     }
 
@@ -357,10 +421,10 @@ public class GsiService : IGsiService, IDisposable
         lock (_stateLock)
         {
             var result = new List<GsiPlayerInfo>();
-            foreach (var entry in _playerNames)
+            foreach (var entry in _playerSnapshot)
             {
                 if (IsSteam64Id(entry.Key))
-                    result.Add(new GsiPlayerInfo { SteamId = entry.Key, Name = entry.Value });
+                    result.Add(entry.Value);
             }
 
             return result;
@@ -485,14 +549,18 @@ public class GsiService : IGsiService, IDisposable
     private void FireKill(string victimName, string killerName, bool isObserverOnKiller,
         string? observerTargetName, DateTime detectedAt)
     {
-        Dispatcher.UIThread.Post(() => OnKill?.Invoke(this, new GsiKillEventArgs
+        Dispatcher.UIThread.Post(() =>
         {
-            KillerName = killerName,
-            VictimName = victimName,
-            IsObserverOnKiller = isObserverOnKiller,
-            ObserverTargetName = observerTargetName,
-            KillDetectedAt = detectedAt,
-        }));
+            OnPlayerDied?.Invoke(this, EventArgs.Empty);
+            OnKill?.Invoke(this, new GsiKillEventArgs
+            {
+                KillerName = killerName,
+                VictimName = victimName,
+                IsObserverOnKiller = isObserverOnKiller,
+                ObserverTargetName = observerTargetName,
+                KillDetectedAt = detectedAt,
+            });
+        });
     }
 
     private string? FindKiller(JObject allPlayers, string victimSteamId)

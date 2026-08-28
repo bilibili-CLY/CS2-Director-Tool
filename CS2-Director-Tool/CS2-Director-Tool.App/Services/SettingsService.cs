@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 
@@ -20,9 +21,9 @@ public class SettingsService : ISettingsService
     private string _gameSceneName = string.Empty;
     private string _replaySceneName = string.Empty;
     private string _replaySourceName = "Replay";
-    private bool _pauseMusicEnabled;
-    private string _pauseMusicSourceName = string.Empty;
-    private bool _killReplayEnabled;
+    private bool _eventActionEnabled;
+    private List<Models.EventActionRule> _eventActionRules = new();
+    private List<Models.EventActionPreset> _eventActionPresets = new();
     private string _playerApiBaseUrl = "https://majo-cup.laffeynyaa.com";
 
     public SettingsService()
@@ -82,22 +83,22 @@ public class SettingsService : ISettingsService
         set { _replaySourceName = value ?? string.Empty; Save(); }
     }
 
-    public bool PauseMusicEnabled
+    public List<Models.EventActionRule> EventActionRules
     {
-        get => _pauseMusicEnabled;
-        set { _pauseMusicEnabled = value; Save(); }
+        get => _eventActionRules;
+        set { _eventActionRules = value ?? new(); Save(); }
     }
 
-    public string PauseMusicSourceName
+    public bool EventActionEnabled
     {
-        get => _pauseMusicSourceName;
-        set { _pauseMusicSourceName = value ?? string.Empty; Save(); }
+        get => _eventActionEnabled;
+        set { _eventActionEnabled = value; Save(); }
     }
 
-    public bool KillReplayEnabled
+    public List<Models.EventActionPreset> EventActionPresets
     {
-        get => _killReplayEnabled;
-        set { _killReplayEnabled = value; Save(); }
+        get => _eventActionPresets;
+        set { _eventActionPresets = value ?? new(); Save(); }
     }
 
     public string PlayerApiBaseUrl
@@ -127,9 +128,9 @@ public class SettingsService : ISettingsService
             _gameSceneName = data.GameSceneName ?? string.Empty;
             _replaySceneName = data.ReplaySceneName ?? string.Empty;
             _replaySourceName = data.ReplaySourceName ?? "Replay";
-            _pauseMusicEnabled = data.PauseMusicEnabled;
-            _pauseMusicSourceName = data.PauseMusicSourceName ?? string.Empty;
-            _killReplayEnabled = data.KillReplayEnabled;
+            _eventActionEnabled = data.EventActionEnabled;
+            _eventActionRules = data.EventActionRules ?? new();
+            _eventActionPresets = data.EventActionPresets ?? new();
             _playerApiBaseUrl = string.IsNullOrWhiteSpace(data.PlayerApiBaseUrl)
                 ? "https://majo-cup.laffeynyaa.com"
                 : data.PlayerApiBaseUrl;
@@ -158,9 +159,9 @@ public class SettingsService : ISettingsService
                 GameSceneName = _gameSceneName,
                 ReplaySceneName = _replaySceneName,
                 ReplaySourceName = _replaySourceName,
-                PauseMusicEnabled = _pauseMusicEnabled,
-                PauseMusicSourceName = _pauseMusicSourceName,
-                KillReplayEnabled = _killReplayEnabled,
+                EventActionEnabled = _eventActionEnabled,
+                EventActionRules = _eventActionRules,
+                EventActionPresets = _eventActionPresets,
                 PlayerApiBaseUrl = _playerApiBaseUrl
             };
 
@@ -183,9 +184,9 @@ public class SettingsService : ISettingsService
         public string GameSceneName { get; set; } = string.Empty;
         public string ReplaySceneName { get; set; } = string.Empty;
         public string ReplaySourceName { get; set; } = "Replay";
-        public bool PauseMusicEnabled { get; set; }
-        public string PauseMusicSourceName { get; set; } = string.Empty;
-        public bool KillReplayEnabled { get; set; }
+        public bool EventActionEnabled { get; set; }
+        public List<Models.EventActionRule> EventActionRules { get; set; } = new();
+        public List<Models.EventActionPreset> EventActionPresets { get; set; } = new();
         public string PlayerApiBaseUrl { get; set; } = "https://majo-cup.laffeynyaa.com";
     }
 }

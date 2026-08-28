@@ -1,0 +1,154 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CS2_Director_Tool.App.ViewModels"
+             xmlns:m="using:CS2_Director_Tool.App.Models"
+             xmlns:con="using:CS2_Director_Tool.App.Converters"
+             x:Class="CS2_Director_Tool.App.Views.EventActionPage"
+             x:DataType="vm:EventActionViewModel"
+             x:Name="Root">
+    <UserControl.Resources>
+        <con:EnumToDescriptionConverter x:Key="EnumToDescription" />
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,28" Spacing="16">
+
+            <TextBlock Text="事件动作" Classes="page-title" />
+            <TextBlock Text="选择游戏内的 GSI 事件，配置事件触发后要执行的动作（播放/停止媒体源、切换场景、击杀回放）"
+                       Classes="page-subtitle" />
+
+            <!-- 总开关 -->
+            <Border Classes="card">
+                <StackPanel Spacing="16">
+                    <CheckBox Content="启用事件动作" IsChecked="{Binding IsEnabled}" Classes="toggle" />
+                    <TextBlock Text="{Binding Status}" Classes="label-text" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!-- 规则列表 -->
+            <Border Classes="card" IsEnabled="{Binding IsEnabled}">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="规则列表" Classes="section-title"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Content="+ 添加规则" Command="{Binding AddRuleCommand}"
+                                Classes="btn" />
+                    </Grid>
+
+                    <TextBlock Text="尚未添加任何事件动作规则。点击右上角「添加规则」开始配置。"
+                               Classes="caption-text" IsVisible="{Binding HasNoRules}" />
+
+                    <ItemsControl ItemsSource="{Binding Rules}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="m:EventActionRule">
+                                <Border Background="#161616"
+                                        BorderBrush="#2A2A2A" BorderThickness="1"
+                                        CornerRadius="8" Padding="16" Margin="0,0,0,12">
+                                    <StackPanel Spacing="12">
+                                        <!-- 规则头部：启用开关 + 事件选择 + 删除 -->
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsEnabled}"
+                                                      Classes="toggle" VerticalAlignment="Center" />
+                                            <ComboBox Grid.Column="1"
+                                                      ItemsSource="{Binding #Root.((vm:EventActionViewModel)DataContext).EventTypes}"
+                                                      SelectedItem="{Binding EventType}"
+                                                      VerticalAlignment="Center">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate x:DataType="m:GsiEventType">
+                                                        <TextBlock Text="{Binding Converter={StaticResource EnumToDescription}}" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                            <Button Grid.Column="2" Content="删除此规则"
+                                                    Command="{Binding #Root.((vm:EventActionViewModel)DataContext).RemoveRuleCommand}"
+                                                    CommandParameter="{Binding}" Classes="btn" />
+                                        </Grid>
+
+                                        <!-- 动作列表 -->
+                                        <TextBlock Text="触发后执行：" Classes="label-text" />
+                                        <ItemsControl ItemsSource="{Binding Actions}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="m:EventActionItem">
+                                                    <Grid ColumnDefinitions="160,*,Auto" ColumnSpacing="10"
+                                                          Margin="0,0,0,8">
+                                                        <ComboBox Grid.Column="0"
+                                                                  ItemsSource="{Binding #Root.((vm:EventActionViewModel)DataContext).ActionTypes}"
+                                                                  SelectedItem="{Binding Type}"
+                                                                  VerticalAlignment="Center">
+                                                            <ComboBox.ItemTemplate>
+                                                                <DataTemplate x:DataType="m:EventActionType">
+                                                                    <TextBlock Text="{Binding Converter={StaticResource EnumToDescription}}" />
+                                                                </DataTemplate>
+                                                            </ComboBox.ItemTemplate>
+                                                        </ComboBox>
+                                                        <TextBox Grid.Column="1" Text="{Binding Target, UpdateSourceTrigger=LostFocus}"
+                                                                 Classes="input"
+                                                                 PlaceholderText="媒体源名 / 场景名" />                                                        <Button Grid.Column="2" Content="✕"
+                                                                Command="{Binding #Root.((vm:EventActionViewModel)DataContext).RemoveActionCommand}"
+                                                                CommandParameter="{Binding}" Classes="btn" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <Button Content="+ 添加动作"
+                                                Command="{Binding #Root.((vm:EventActionViewModel)DataContext).AddActionCommand}"
+                                                CommandParameter="{Binding}" Classes="btn" HorizontalAlignment="Left" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- 预设与回放 -->
+            <Border Classes="card">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="预设与回放" Classes="section-title" />
+
+                    <TextBlock Text="击杀回放通过事件动作规则驱动。点击下方按钮一键生成推荐规则，即可实现「回合开始→录制、击杀→记录、回合结束→生成并播放回放」。"
+                               Classes="label-text" TextWrapping="Wrap" />
+                    <Button Content="一键生成推荐的回放规则（替换当前规则）"
+                            Command="{Binding AddRecommendedReplayRulesCommand}" Classes="btn"
+                            HorizontalAlignment="Left" />
+
+                    <Separator />
+
+                    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
+                        <TextBlock Grid.Row="0" Text="规则预设" Classes="label-text" />
+
+                        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <ComboBox Grid.Column="0" ItemsSource="{Binding Presets}"
+                                      SelectedItem="{Binding SelectedPreset}"
+                                      PlaceholderText="选择预设...">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="m:EventActionPreset">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Grid Grid.Column="1" ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
+                                <Button Grid.Column="0" Content="加载" Command="{Binding LoadPresetCommand}"
+                                        Classes="btn" />
+                                <Button Grid.Column="1" Content="删除" Command="{Binding DeletePresetCommand}"
+                                        Classes="btn" />
+                            </Grid>
+                        </Grid>
+
+                        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <TextBox Grid.Column="0" Text="{Binding NewPresetName, UpdateSourceTrigger=LostFocus}"
+                                     Classes="input" PlaceholderText="新预设名称" />
+                            <Button Grid.Column="1" Content="保存当前规则为预设"
+                                    Command="{Binding SavePresetCommand}" Classes="btn" />
+                        </Grid>
+                    </Grid>
+
+                    <TextBlock Text="说明：加载预设会把所选预设的规则整组替换当前规则。保存需填写一个新的预设名称或先选中一个预设。"
+                               Classes="caption-text" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

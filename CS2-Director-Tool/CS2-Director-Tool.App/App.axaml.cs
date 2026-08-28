@@ -25,15 +25,15 @@ public partial class App : Application
             _serviceProvider = BuildServiceProvider();
 
             var homeVm = _serviceProvider.GetRequiredService<HomeViewModel>();
-            var killReplayVm = _serviceProvider.GetRequiredService<KillReplayViewModel>();
-            var pauseMusicVm = _serviceProvider.GetRequiredService<PauseMusicViewModel>();
+            var eventActionVm = _serviceProvider.GetRequiredService<EventActionViewModel>();
             var playerRenameVm = _serviceProvider.GetRequiredService<PlayerRenameViewModel>();
+            var logVm = _serviceProvider.GetRequiredService<LogViewModel>();
             var mainVm = _serviceProvider.GetRequiredService<MainViewModel>();
 
             var homePage = new HomePage { DataContext = homeVm };
-            var killReplayPage = new KillReplayPage { DataContext = killReplayVm };
-            var pauseMusicPage = new PauseMusicPage { DataContext = pauseMusicVm };
+            var eventActionPage = new EventActionPage { DataContext = eventActionVm };
             var playerRenamePage = new PlayerRenamePage { DataContext = playerRenameVm };
+            var logPage = new LogPage { DataContext = logVm };
 
             mainVm.TabList.Add(new TabItem
             {
@@ -43,17 +43,11 @@ public partial class App : Application
                 IsSelected = true
             });
 
-            var killTab = new TabItem
+            var eventActionTab = new TabItem
             {
-                Id = "killReplay",
-                Title = "击杀回放",
-                Content = killReplayPage
-            };
-            var pauseTab = new TabItem
-            {
-                Id = "pauseMusic",
-                Title = "暂停音乐",
-                Content = pauseMusicPage
+                Id = "eventAction",
+                Title = "事件动作",
+                Content = eventActionPage
             };
             var renameTab = new TabItem
             {
@@ -62,12 +56,16 @@ public partial class App : Application
                 Content = playerRenamePage
             };
 
-            mainVm.TabList.Add(killTab);
-            mainVm.TabList.Add(pauseTab);
+            mainVm.TabList.Add(eventActionTab);
             mainVm.TabList.Add(renameTab);
 
-            // 击杀回放结束后，通知暂停音乐视图模型恢复被挂起的音乐播放。
-            killReplayVm.ReplayPlaybackEnded += () => pauseMusicVm.OnReplayPlaybackEnded();
+            var logTab = new TabItem
+            {
+                Id = "log",
+                Title = "日志",
+                Content = logPage
+            };
+            mainVm.TabList.Add(logTab);
 
             desktop.MainWindow = new MainWindow(mainVm);
 
@@ -75,6 +73,7 @@ public partial class App : Application
             {
                 try
                 {
+                    _serviceProvider.GetRequiredService<ILogService>().Log(LogCategory.App, "应用退出");
                     _serviceProvider.GetRequiredService<IGsiService>().Stop();
                 }
                 finally
@@ -84,6 +83,7 @@ public partial class App : Application
             };
 
             // 在应用退出前启动 GSI 监听。
+            _serviceProvider.GetRequiredService<ILogService>().Log(LogCategory.App, "应用启动");
             _serviceProvider.GetRequiredService<IGsiService>().Start();
         }
 
@@ -98,18 +98,17 @@ public partial class App : Application
         services.AddSingleton<ICs2InstallService, Cs2InstallService>();
         services.AddSingleton<IGsiService, GsiService>();
         services.AddSingleton<IObsService, ObsService>();
+        services.AddSingleton<IEventActionService, EventActionService>();
+        services.AddSingleton<IReplayWorkflowService, ReplayWorkflowService>();
         services.AddSingleton<IFfmpegService, FfmpegService>();
         services.AddSingleton<IPlayerApiService>(sp =>
             new MajoCupPlayerApiService(sp.GetRequiredService<ISettingsService>().PlayerApiBaseUrl));
+        services.AddSingleton<ILogService, LogService>();
 
         services.AddSingleton<HomeViewModel>();
-        services.AddSingleton<KillReplayViewModel>();
-        services.AddSingleton<PauseMusicViewModel>(sp => new PauseMusicViewModel(
-            sp.GetRequiredService<ISettingsService>(),
-            sp.GetRequiredService<IGsiService>(),
-            sp.GetRequiredService<IObsService>(),
-            () => sp.GetRequiredService<KillReplayViewModel>().IsReplayPlaying));
+        services.AddSingleton<EventActionViewModel>();
         services.AddSingleton<PlayerRenameViewModel>();
+        services.AddSingleton<LogViewModel>();
         services.AddSingleton<MainViewModel>(sp =>
             new MainViewModel(() => sp.GetRequiredService<HomeViewModel>().PrerequisitesMet));
 

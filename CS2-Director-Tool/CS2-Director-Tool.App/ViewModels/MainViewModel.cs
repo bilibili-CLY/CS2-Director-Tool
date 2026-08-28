@@ -7,6 +7,7 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CS2_Director_Tool.App.Models;
+using CS2_Director_Tool.App.Services;
 
 namespace CS2_Director_Tool.App.ViewModels;
 
@@ -42,7 +43,8 @@ public partial class MainViewModel : ViewModelBase
                 return;
 
             // 开发环境下始终可跳转；发布环境需满足前置条件，否则提示先配置。
-            if (tab.Id != HomeTabId && !IsDevelopment && !_prerequisitesMet())
+            // 日志页为诊断页，始终可直接访问。
+            if (tab.Id != HomeTabId && tab.Id != LogTabId && !IsDevelopment && !_prerequisitesMet())
             {
                 TabAccessBlocked?.Invoke(this,
                     "请先在「主页」页面配置 CS2 路径 / GSI / FFmpeg / OBS 前置条件后再使用该功能。");
@@ -54,6 +56,7 @@ public partial class MainViewModel : ViewModelBase
     }
 
     private const string HomeTabId = "home";
+    private const string LogTabId = "log";
 
     /// <summary>
     /// 是否为开发环境（Debug 构建，仅用于判断侧边栏是否始终可跳转）。

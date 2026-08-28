@@ -30,8 +30,26 @@ public interface IGsiService
     /// <summary>游戏退出暂停状态时发生。</summary>
     event EventHandler OnGameResumed;
 
-    /// <summary>输出描述接收到的 GSI 数据与状态切换的诊断日志行时发生。</summary>
-    event EventHandler<string> OnLog;
+    /// <summary>比赛结束时发生（地图阶段为 "gameover"）。</summary>
+    event EventHandler OnGameOver;
+
+    /// <summary>热身开始时发生（地图阶段进入 "warmup"）。</summary>
+    event EventHandler OnWarmupStarted;
+
+    /// <summary>热身结束时发生（地图阶段由 "warmup" 变为其他）。</summary>
+    event EventHandler OnWarmupOver;
+
+    /// <summary>炸弹被安装时发生。</summary>
+    event EventHandler OnBombPlanted;
+
+    /// <summary>炸弹被拆除时发生。</summary>
+    event EventHandler OnBombDefused;
+
+    /// <summary>炸弹爆炸时发生。</summary>
+    event EventHandler OnBombExploded;
+
+    /// <summary>检测到玩家死亡（生命值降为 0）时发生。</summary>
+    event EventHandler OnPlayerDied;
 
     /// <summary>返回当前已知玩家的快照（SteamID 与游戏内名称），仅保留有效的 Steam 64 位 ID。</summary>
     IReadOnlyList<GsiPlayerInfo> GetCurrentPlayers();
