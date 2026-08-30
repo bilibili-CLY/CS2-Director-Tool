@@ -6,5 +6,6 @@ bin/
 obj/
 *.user
 .trae/
+.omo/
 publish/
 *.zip

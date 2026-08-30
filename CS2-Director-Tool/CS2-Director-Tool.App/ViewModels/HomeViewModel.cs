@@ -29,11 +29,15 @@ public partial class HomeViewModel : ViewModelBase
     private bool _isObsConnected;
     private bool _isGsiInstalled;
     private bool _ffmpegValid;
+    private string _replayOutputPath = string.Empty;
 
     private readonly AsyncRelayCommand _toggleObsCommand;
 
     /// <summary>由视图注入的文件选择器（返回所选文件完整路径或 null）。</summary>
     public Func<Task<string?>>? ExecutableFilePicker { get; set; }
+
+    /// <summary>由视图注入的文件夹选择器（返回所选文件夹完整路径或 null）。</summary>
+    public Func<Task<string?>>? FolderPicker { get; set; }
 
     /// <summary>前置条件（CS2 路径、GSI、ffmpeg、OBS 连接）满足状态发生变化时触发。</summary>
     public event EventHandler? PrerequisitesChanged;
@@ -105,6 +109,16 @@ public partial class HomeViewModel : ViewModelBase
         }
     }
 
+    public string ReplayOutputPath
+    {
+        get => _replayOutputPath;
+        set
+        {
+            if (SetProperty(ref _replayOutputPath, value ?? string.Empty))
+                _settings.ReplayOutputPath = _replayOutputPath;
+        }
+    }
+
     public string? GsiStatus
     {
         get => _gsiStatus;
@@ -152,6 +166,8 @@ public partial class HomeViewModel : ViewModelBase
 
     public IAsyncRelayCommand ToggleObsCommand => _toggleObsCommand;
 
+    public IAsyncRelayCommand BrowseReplayOutputPathCommand { get; }
+
     public HomeViewModel(ISettingsService settings, ICs2InstallService cs2Install, IObsService obs,
         IFfmpegService ffmpeg, ILogService log)
     {
@@ -164,6 +180,7 @@ public partial class HomeViewModel : ViewModelBase
         BrowseCs2Command = new AsyncRelayCommand(BrowseCs2Async);
         BrowseFfmpegCommand = new AsyncRelayCommand(BrowseFfmpegAsync);
         InstallGsiCommand = new AsyncRelayCommand(InstallGsiAsync);
+        BrowseReplayOutputPathCommand = new AsyncRelayCommand(BrowseReplayOutputPathAsync);
         _toggleObsCommand = new AsyncRelayCommand(ToggleObsAsync,
             () => !string.IsNullOrEmpty(ObsAddress) && !string.IsNullOrEmpty(ObsPort));
 
@@ -173,6 +190,7 @@ public partial class HomeViewModel : ViewModelBase
         ObsAddress = _settings.ObsWebSocketAddress;
         ObsPort = _settings.ObsWebSocketPort;
         ObsPassword = _settings.ObsWebSocketPassword;
+        ReplayOutputPath = _settings.ReplayOutputPath;
 
         _ffmpegValid = !string.IsNullOrEmpty(_ffmpegPath) && _ffmpeg.ValidatePath(_ffmpegPath);
         IsGsiInstalled = !string.IsNullOrEmpty(_cs2Path) && _cs2Install.IsGsiConfigInstalled(_cs2Path);
@@ -220,6 +238,19 @@ public partial class HomeViewModel : ViewModelBase
         {
             FfmpegPath = path;
             _log.Log(LogCategory.Home, $"已选择 ffmpeg 路径: {path}");
+        }
+    }
+
+    private async Task BrowseReplayOutputPathAsync()
+    {
+        var picker = FolderPicker;
+        if (picker is null)
+            return;
+        var path = await picker();
+        if (!string.IsNullOrEmpty(path))
+        {
+            ReplayOutputPath = path;
+            _log.Log(LogCategory.Home, $"已选择回放输出目录: {path}");
         }
     }
 

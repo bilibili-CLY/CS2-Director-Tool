@@ -22,6 +22,7 @@ public class FfmpegService : IFfmpegService
     private const int ConcatProcessTimeoutMs = 600_000;
 
     private readonly ILogService _log;
+    private readonly ISettingsService _settingsService;
     private bool _isValid;
 
     public bool IsValid => _isValid;
@@ -30,9 +31,10 @@ public class FfmpegService : IFfmpegService
     public event EventHandler<ClippingCompletedEventArgs>? OnClippingComplete;
 
     /// <summary>初始化 <see cref="FfmpegService"/> 类的新实例。</summary>
-    public FfmpegService(ILogService log)
+    public FfmpegService(ILogService log, ISettingsService settingsService)
     {
         _log = log;
+        _settingsService = settingsService;
     }
 
     public bool ValidatePath(string ffmpegPath)
@@ -96,7 +98,10 @@ public class FfmpegService : IFfmpegService
         if (!File.Exists(ffmpegPath))
             throw new FileNotFoundException("FFmpeg executable not found.", ffmpegPath);
 
-        var tempDir = Path.Combine(Path.GetTempPath(), "MajoCupDirector", "FfmpegClips", Guid.NewGuid().ToString("N"));
+        var replayOutputPath = string.IsNullOrWhiteSpace(_settingsService.ReplayOutputPath)
+            ? Path.Combine(Path.GetTempPath(), "CSDirectorTool")
+            : _settingsService.ReplayOutputPath;
+        var tempDir = Path.Combine(replayOutputPath, "FfmpegClips", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDir);
 
         _log.Log(LogCategory.Ffmpeg,
@@ -108,7 +113,7 @@ public class FfmpegService : IFfmpegService
         try
         {
             double totalDuration = clips.Sum(c => c.Duration);
-            double processedDuration = 0;
+            var tasks = new List<Task>();
 
             for (var i = 0; i < clips.Count; i++)
             {
@@ -121,30 +126,34 @@ public class FfmpegService : IFfmpegService
                 var arguments = $"-ss {clip.StartTime.ToString(CultureInfo.InvariantCulture)} -i \"{inputFile}\" -t {clip.Duration.ToString(CultureInfo.InvariantCulture)} -c:v libx264 -preset veryfast -c:a aac -y \"{tempClipFile}\"";
                 var clipIndex = i;
 
-                await RunFfmpegProcessAsync(
-                    ffmpegPath,
-                    arguments,
-                    "clip extraction",
-                    cancellationToken,
-                    ExtractProcessTimeoutMs,
-                    (line) =>
-                    {
-                        var progress = ParseFfmpegProgress(line, clip.Duration);
-                        if (progress.HasValue)
+                tasks.Add(Task.Run(async () =>
+                {
+                    await RunFfmpegProcessAsync(
+                        ffmpegPath,
+                        arguments,
+                        "clip extraction",
+                        cancellationToken,
+                        ExtractProcessTimeoutMs,
+                        (line) =>
                         {
-                            var overallProgress = (processedDuration + progress.Value) / totalDuration * 100.0;
-                            Dispatcher.UIThread.Post(() =>
-                                OnClippingProgress?.Invoke(this, Math.Min(overallProgress, 100.0)));
-                        }
-                    });
+                            var progress = ParseFfmpegProgress(line, clip.Duration);
+                            if (progress.HasValue)
+                            {
+                                var overallProgress = (clipIndex * clip.Duration + progress.Value * clip.Duration) / totalDuration * 100.0;
+                                Dispatcher.UIThread.Post(() =>
+                                    OnClippingProgress?.Invoke(this, Math.Min(overallProgress, 100.0)));
+                            }
+                        });
 
-                processedDuration += clip.Duration;
-                _log.Log(LogCategory.Ffmpeg,
-                    $"片段 {i + 1}/{clips.Count} 提取完成: {Path.GetFileName(tempClipFile)} (开始 {clip.StartTime:0.###}s, 时长 {clip.Duration:0.###}s)");
+                    _log.Log(LogCategory.Ffmpeg,
+                        $"片段 {clipIndex + 1}/{clips.Count} 提取完成: {Path.GetFileName(tempClipFile)} (开始 {clip.StartTime:0.###}s, 时长 {clip.Duration:0.###}s)");
 
-                var clipProgress = (double)(i + 1) / clips.Count * 100.0;
-                Dispatcher.UIThread.Post(() => OnClippingProgress?.Invoke(this, clipProgress));
+                    var clipProgress = (double)(clipIndex + 1) / clips.Count * 100.0;
+                    Dispatcher.UIThread.Post(() => OnClippingProgress?.Invoke(this, clipProgress));
+                }, cancellationToken));
             }
+
+            await Task.WhenAll(tasks);
 
             cancellationToken.ThrowIfCancellationRequested();
             concatFileList = Path.Combine(tempDir, "concat_list.txt");

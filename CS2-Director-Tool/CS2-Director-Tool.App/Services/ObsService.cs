@@ -218,7 +218,16 @@ public class ObsService : IObsService, IDisposable
             }
             else
             {
-                _obs.CreateInput(actualSceneName, sourceName, "ffmpeg_source", settings, true);
+                try
+                {
+                    _obs.CreateInput(actualSceneName, sourceName, "ffmpeg_source", settings, true);
+                }
+                catch (ErrorResponseException ex) when (ex.ErrorCode == 601)
+                {
+                    Log($"媒体源 '{sourceName}' 已存在（错误码 601），回退为更新设置并重启源");
+                    _obs.SetInputSettings(sourceName, settings, true);
+                    _obs.TriggerMediaInputAction(sourceName, "OBS_WEBSOCKET_MEDIA_INPUT_ACTION_RESTART");
+                }
             }
 
             if (!WaitForInputToExist(sourceName))

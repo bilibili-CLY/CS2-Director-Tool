@@ -25,12 +25,15 @@ public class SettingsService : ISettingsService
     private List<Models.EventActionRule> _eventActionRules = new();
     private List<Models.EventActionPreset> _eventActionPresets = new();
     private string _playerApiBaseUrl = "https://majo-cup.laffeynyaa.com";
+    private string _replayOutputPath = string.Empty;
 
     public SettingsService()
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var directory = Path.Combine(appData, "MajoCupDirector");
         _settingsFilePath = Path.Combine(directory, "settings.json");
+
+        _replayOutputPath = Path.Combine(Path.GetTempPath(), "CSDirectorTool");
 
         Load();
     }
@@ -107,6 +110,12 @@ public class SettingsService : ISettingsService
         set { _playerApiBaseUrl = value ?? string.Empty; Save(); }
     }
 
+    public string ReplayOutputPath
+    {
+        get => _replayOutputPath;
+        set { _replayOutputPath = value ?? string.Empty; Save(); }
+    }
+
     public void Load()
     {
         try
@@ -134,6 +143,7 @@ public class SettingsService : ISettingsService
             _playerApiBaseUrl = string.IsNullOrWhiteSpace(data.PlayerApiBaseUrl)
                 ? "https://majo-cup.laffeynyaa.com"
                 : data.PlayerApiBaseUrl;
+            _replayOutputPath = data.ReplayOutputPath ?? Path.Combine(Path.GetTempPath(), "CSDirectorTool");
         }
         catch
         {
@@ -162,7 +172,8 @@ public class SettingsService : ISettingsService
                 EventActionEnabled = _eventActionEnabled,
                 EventActionRules = _eventActionRules,
                 EventActionPresets = _eventActionPresets,
-                PlayerApiBaseUrl = _playerApiBaseUrl
+                PlayerApiBaseUrl = _playerApiBaseUrl,
+                ReplayOutputPath = _replayOutputPath
             };
 
             var json = JsonConvert.SerializeObject(data, Formatting.Indented);
@@ -188,5 +199,6 @@ public class SettingsService : ISettingsService
         public List<Models.EventActionRule> EventActionRules { get; set; } = new();
         public List<Models.EventActionPreset> EventActionPresets { get; set; } = new();
         public string PlayerApiBaseUrl { get; set; } = "https://majo-cup.laffeynyaa.com";
+        public string ReplayOutputPath { get; set; } = string.Empty;
     }
 }

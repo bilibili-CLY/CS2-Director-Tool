@@ -37,6 +37,18 @@
 
             <Border Classes="card">
                 <StackPanel>
+                    <TextBlock Text="回放输出目录" Classes="section-title" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Grid.Column="0" Text="{Binding ReplayOutputPath}"
+                                 Classes="input" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <Button Grid.Column="1" Content="浏览" Command="{Binding BrowseReplayOutputPathCommand}"
+                                Classes="btn" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card">
+                <StackPanel>
                     <TextBlock Text="OBS Studio WebSocket" Classes="section-title" />
                     <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,16"
                           RowDefinitions="Auto,Auto,Auto">

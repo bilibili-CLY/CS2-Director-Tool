@@ -24,6 +24,7 @@ public partial class HomePage : UserControl
             return;
 
         viewModel.ExecutableFilePicker = PickExecutableFileAsync;
+        viewModel.FolderPicker = PickFolderAsync;
         ObsPasswordBox.Text = viewModel.ObsPassword ?? string.Empty;
     }
 
@@ -52,5 +53,20 @@ public partial class HomePage : UserControl
         });
 
         return files.Count > 0 ? files[0].Path.LocalPath : null;
+    }
+
+    private async Task<string?> PickFolderAsync()
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is null)
+            return null;
+
+        var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "选择回放输出目录",
+            AllowMultiple = false
+        });
+
+        return folders.Count > 0 ? folders[0].Path.LocalPath : null;
     }
 }

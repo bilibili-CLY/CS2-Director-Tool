@@ -28,6 +28,9 @@ public interface ISettingsService
     /// <summary>获取或设置玩家改名 API 的基础地址（可配置）。</summary>
     string PlayerApiBaseUrl { get; set; }
 
+    /// <summary>获取或设置回放输出目录。</summary>
+    string ReplayOutputPath { get; set; }
+
     /// <summary>从持久化存储加载设置。</summary>
     void Load();
 

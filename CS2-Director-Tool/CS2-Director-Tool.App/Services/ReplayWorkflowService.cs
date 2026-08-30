@@ -254,7 +254,9 @@ public class ReplayWorkflowService : IReplayWorkflowService
             }
             clips = MergeClips(clips);
 
-            string outputDir = Path.Combine(Path.GetTempPath(), "MajoCupDirector");
+            string outputDir = string.IsNullOrWhiteSpace(_settingsService.ReplayOutputPath)
+                ? Path.Combine(Path.GetTempPath(), "CSDirectorTool")
+                : _settingsService.ReplayOutputPath;
             Directory.CreateDirectory(outputDir);
             string outputFile = Path.Combine(outputDir, $"replay_{DateTime.Now:yyyyMMddHHmmss}.mp4");
 
