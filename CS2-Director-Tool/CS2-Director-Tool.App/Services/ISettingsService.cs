@@ -16,6 +16,9 @@ public interface ISettingsService
     /// <summary>获取或设置用于回放播放的媒体源名称。</summary>
     string ReplaySourceName { get; set; }
 
+    /// <summary>获取或设置是否启用击杀回放功能。</summary>
+    bool KillReplayEnabled { get; set; }
+
     /// <summary>获取或设置是否启用事件动作功能。</summary>
     bool EventActionEnabled { get; set; }
 

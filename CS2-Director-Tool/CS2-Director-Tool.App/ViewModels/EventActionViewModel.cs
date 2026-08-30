@@ -14,7 +14,7 @@ namespace CS2_Director_Tool.App.ViewModels
 {
     /// <summary>
     /// 事件动作页面视图模型：配置 GSI 事件触发后要执行的动作，
-    /// 并支持将规则集保存为命名预设、一键加载与一键生成推荐回放规则。
+    /// 并支持将规则集保存为命名预设、一键加载。
     /// </summary>
     public partial class EventActionViewModel : ViewModelBase
     {
@@ -59,9 +59,6 @@ namespace CS2_Director_Tool.App.ViewModels
 
         /// <summary>删除所选预设的命令。</summary>
         public IRelayCommand DeletePresetCommand { get; }
-
-        /// <summary>一键生成推荐的回放规则（整组替换当前规则）的命令。</summary>
-        public IRelayCommand AddRecommendedReplayRulesCommand { get; }
 
         /// <summary>获取或设置当前选中的预设。</summary>
         public EventActionPreset? SelectedPreset
@@ -132,7 +129,6 @@ namespace CS2_Director_Tool.App.ViewModels
             SavePresetCommand = new RelayCommand(SavePreset);
             LoadPresetCommand = new RelayCommand(LoadPreset);
             DeletePresetCommand = new RelayCommand(DeletePreset);
-            AddRecommendedReplayRulesCommand = new RelayCommand(AddRecommendedReplayRules);
 
             _isEnabled = settingsService.EventActionEnabled;
 
@@ -162,7 +158,7 @@ namespace CS2_Director_Tool.App.ViewModels
             HasRules = Rules.Count > 0;
             Status = Rules.Count > 0
                 ? $"已配置 {Rules.Count} 条规则，共 {Rules.Sum(r => r.Actions.Count)} 个动作。"
-                : "尚未配置任何规则。可点击「添加规则」或「一键生成回放规则」开始。";
+                : "尚未配置任何规则。可点击「添加规则」开始。";
         }
 
         private void AddRule()
@@ -259,27 +255,6 @@ namespace CS2_Director_Tool.App.ViewModels
             SelectedPreset = null;
             SavePresets();
             _log.Log(LogCategory.EventAction, $"已删除预设「{preset.Name}」");
-        }
-
-        private void AddRecommendedReplayRules()
-        {
-            var recommended = CreateRecommendedReplayRules();
-            ReplaceRules(recommended);
-            _log.Log(LogCategory.EventAction, "已一键生成并应用推荐的回放规则");
-        }
-
-        private static List<EventActionRule> CreateRecommendedReplayRules()
-        {
-            var roundStart = new EventActionRule { EventType = GsiEventType.RoundStarted, IsEnabled = true };
-            roundStart.Actions.Add(new EventActionItem { Type = EventActionType.StartReplayRecording });
-
-            var kill = new EventActionRule { EventType = GsiEventType.Kill, IsEnabled = true };
-            kill.Actions.Add(new EventActionItem { Type = EventActionType.RecordKillPoint });
-
-            var roundEnd = new EventActionRule { EventType = GsiEventType.RoundEnded, IsEnabled = true };
-            roundEnd.Actions.Add(new EventActionItem { Type = EventActionType.GenerateReplay });
-
-            return new List<EventActionRule> { roundStart, kill, roundEnd };
         }
 
         private void ReplaceRules(IEnumerable<EventActionRule> rules)

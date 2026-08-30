@@ -25,12 +25,14 @@ public partial class App : Application
             _serviceProvider = BuildServiceProvider();
 
             var homeVm = _serviceProvider.GetRequiredService<HomeViewModel>();
+            var killReplayVm = _serviceProvider.GetRequiredService<KillReplayViewModel>();
             var eventActionVm = _serviceProvider.GetRequiredService<EventActionViewModel>();
             var playerRenameVm = _serviceProvider.GetRequiredService<PlayerRenameViewModel>();
             var logVm = _serviceProvider.GetRequiredService<LogViewModel>();
             var mainVm = _serviceProvider.GetRequiredService<MainViewModel>();
 
             var homePage = new HomePage { DataContext = homeVm };
+            var killReplayPage = new KillReplayPage { DataContext = killReplayVm };
             var eventActionPage = new EventActionPage { DataContext = eventActionVm };
             var playerRenamePage = new PlayerRenamePage { DataContext = playerRenameVm };
             var logPage = new LogPage { DataContext = logVm };
@@ -43,6 +45,12 @@ public partial class App : Application
                 IsSelected = true
             });
 
+            var killReplayTab = new TabItem
+            {
+                Id = "killReplay",
+                Title = "击杀回放",
+                Content = killReplayPage
+            };
             var eventActionTab = new TabItem
             {
                 Id = "eventAction",
@@ -56,6 +64,7 @@ public partial class App : Application
                 Content = playerRenamePage
             };
 
+            mainVm.TabList.Add(killReplayTab);
             mainVm.TabList.Add(eventActionTab);
             mainVm.TabList.Add(renameTab);
 
@@ -106,6 +115,7 @@ public partial class App : Application
         services.AddSingleton<ILogService, LogService>();
 
         services.AddSingleton<HomeViewModel>();
+        services.AddSingleton<KillReplayViewModel>();
         services.AddSingleton<EventActionViewModel>();
         services.AddSingleton<PlayerRenameViewModel>();
         services.AddSingleton<LogViewModel>();

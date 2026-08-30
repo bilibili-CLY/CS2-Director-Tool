@@ -102,23 +102,18 @@
                 </StackPanel>
             </Border>
 
-            <!-- 预设与回放 -->
+            <!-- 预设 -->
             <Border Classes="card">
                 <StackPanel Spacing="16">
-                    <TextBlock Text="预设与回放" Classes="section-title" />
+                    <TextBlock Text="规则预设" Classes="section-title" />
 
-                    <TextBlock Text="击杀回放通过事件动作规则驱动。点击下方按钮一键生成推荐规则，即可实现「回合开始→录制、击杀→记录、回合结束→生成并播放回放」。"
+                    <TextBlock Text="可将当前规则保存为预设以便复用；回放相关动作类型（开始录制 / 记录击杀点 / 生成回放）仍可在规则中配置。"
                                Classes="label-text" TextWrapping="Wrap" />
-                    <Button Content="一键生成推荐的回放规则（替换当前规则）"
-                            Command="{Binding AddRecommendedReplayRulesCommand}" Classes="btn"
-                            HorizontalAlignment="Left" />
 
                     <Separator />
 
-                    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
-                        <TextBlock Grid.Row="0" Text="规则预设" Classes="label-text" />
-
-                        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <Grid RowDefinitions="Auto,Auto" RowSpacing="10">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="10">
                             <ComboBox Grid.Column="0" ItemsSource="{Binding Presets}"
                                       SelectedItem="{Binding SelectedPreset}"
                                       PlaceholderText="选择预设...">
@@ -136,7 +131,7 @@
                             </Grid>
                         </Grid>
 
-                        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="10">
                             <TextBox Grid.Column="0" Text="{Binding NewPresetName, UpdateSourceTrigger=LostFocus}"
                                      Classes="input" PlaceholderText="新预设名称" />
                             <Button Grid.Column="1" Content="保存当前规则为预设"

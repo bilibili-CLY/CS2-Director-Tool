@@ -21,6 +21,7 @@ public class SettingsService : ISettingsService
     private string _gameSceneName = string.Empty;
     private string _replaySceneName = string.Empty;
     private string _replaySourceName = "Replay";
+    private bool _killReplayEnabled;
     private bool _eventActionEnabled;
     private List<Models.EventActionRule> _eventActionRules = new();
     private List<Models.EventActionPreset> _eventActionPresets = new();
@@ -86,6 +87,12 @@ public class SettingsService : ISettingsService
         set { _replaySourceName = value ?? string.Empty; Save(); }
     }
 
+    public bool KillReplayEnabled
+    {
+        get => _killReplayEnabled;
+        set { _killReplayEnabled = value; Save(); }
+    }
+
     public List<Models.EventActionRule> EventActionRules
     {
         get => _eventActionRules;
@@ -137,6 +144,7 @@ public class SettingsService : ISettingsService
             _gameSceneName = data.GameSceneName ?? string.Empty;
             _replaySceneName = data.ReplaySceneName ?? string.Empty;
             _replaySourceName = data.ReplaySourceName ?? "Replay";
+            _killReplayEnabled = data.KillReplayEnabled;
             _eventActionEnabled = data.EventActionEnabled;
             _eventActionRules = data.EventActionRules ?? new();
             _eventActionPresets = data.EventActionPresets ?? new();
@@ -169,6 +177,7 @@ public class SettingsService : ISettingsService
                 GameSceneName = _gameSceneName,
                 ReplaySceneName = _replaySceneName,
                 ReplaySourceName = _replaySourceName,
+                KillReplayEnabled = _killReplayEnabled,
                 EventActionEnabled = _eventActionEnabled,
                 EventActionRules = _eventActionRules,
                 EventActionPresets = _eventActionPresets,
@@ -195,6 +204,7 @@ public class SettingsService : ISettingsService
         public string GameSceneName { get; set; } = string.Empty;
         public string ReplaySceneName { get; set; } = string.Empty;
         public string ReplaySourceName { get; set; } = "Replay";
+        public bool KillReplayEnabled { get; set; }
         public bool EventActionEnabled { get; set; }
         public List<Models.EventActionRule> EventActionRules { get; set; } = new();
         public List<Models.EventActionPreset> EventActionPresets { get; set; } = new();

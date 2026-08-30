@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CS2_Director_Tool.App.ViewModels"
+             x:Class="CS2_Director_Tool.App.Views.KillReplayPage"
+             x:DataType="vm:KillReplayViewModel">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,28" Spacing="16">
+
+            <TextBlock Text="局内击杀回放" Classes="page-title" />
+            <TextBlock Text="自动记录击杀并生成回放片段" Classes="page-subtitle" />
+
+            <Border Classes="card">
+                <StackPanel Spacing="16">
+                    <CheckBox Content="启用击杀回放" IsChecked="{Binding IsKillReplayEnabled}"
+                              Classes="toggle" />
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12"
+                          IsEnabled="{Binding IsKillReplayEnabled}">
+                        <TextBlock Grid.Column="0" Text="{Binding Status}"
+                                   Classes="label-text" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <ProgressBar Grid.Column="1" Value="{Binding Progress}"
+                                     Minimum="0" Maximum="100"
+                                     IsVisible="{Binding IsProcessing}"
+                                     VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="card" IsEnabled="{Binding IsKillReplayEnabled}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="场景配置" Classes="section-title" />
+
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12"
+                          RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="游戏场景:"
+                                   Classes="label-text" Width="88" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding GameSceneName, UpdateSourceTrigger=PropertyChanged}"
+                                 Classes="input" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="回放场景:"
+                                   Classes="label-text" Width="88" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ReplaySceneName, UpdateSourceTrigger=PropertyChanged}"
+                                 Classes="input" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="回放媒体源:"
+                                   Classes="label-text" Width="88" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ReplaySourceName, UpdateSourceTrigger=PropertyChanged}"
+                                 Classes="input" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
