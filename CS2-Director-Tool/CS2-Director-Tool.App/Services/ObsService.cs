@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -10,7 +9,6 @@ using Newtonsoft.Json.Linq;
 using OBSWebsocketDotNet;
 using OBSWebsocketDotNet.Communication;
 using OBSWebsocketDotNet.Types;
-using OBSWebsocketDotNet.Types.Events;
 
 namespace CS2_Director_Tool.App.Services;
 
@@ -27,9 +25,6 @@ public class ObsService : IObsService, IDisposable
     private const int SceneAppearTimeoutMs = 3000;
     private const int InputAppearTimeoutMs = 3000;
 
-    private readonly ConcurrentDictionary<string, TaskCompletionSource<bool>> _playbackEndedSignals =
-        new ConcurrentDictionary<string, TaskCompletionSource<bool>>(StringComparer.OrdinalIgnoreCase);
-
     public bool IsConnected => _obs.IsConnected;
 
     public event EventHandler? OnConnected;
@@ -42,7 +37,6 @@ public class ObsService : IObsService, IDisposable
         _log = log;
         _obs.Connected += OnObsConnected;
         _obs.Disconnected += OnObsDisconnected;
-        _obs.MediaInputPlaybackEnded += OnMediaInputPlaybackEnded;
     }
 
     public Task ConnectAsync(string address, string password)
@@ -255,24 +249,43 @@ public class ObsService : IObsService, IDisposable
 
         var effectiveTimeout = timeout ?? await GetDefaultPlaybackTimeoutAsync(sourceName);
 
-        // 忽略属于早前文件的“ended”事件（例如 RESTART 操作导致旧文件停止播放）。
-        var minimumPlayTime = TimeSpan.FromSeconds(
-            Math.Min(1.5, Math.Max(0.5, effectiveTimeout.TotalSeconds * 0.5)));
+        // 等一小段时间，让媒体源完成创建/重新加载并开始播放，避免把启动瞬间
+        // 的过渡状态误判为播放结束。
+        await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
 
-        await Task.Delay(minimumPlayTime, cancellationToken);
-
-        var endedSignal = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        _playbackEndedSignals[sourceName] = endedSignal;
-
-        var remaining = effectiveTimeout - minimumPlayTime;
-        if (remaining > TimeSpan.Zero)
+        // 不依赖 MediaInputPlaybackEnded 事件：媒体源被 RESTART / 重新加载时会
+        // 触发虚假的“播放结束”事件，导致回放还没播完就提前返回。改为轮询真实
+        // 的媒体状态：状态为 ENDED，或播放进度已达到总时长，即视为播放完成。
+        var deadline = DateTime.UtcNow + effectiveTimeout;
+        while (DateTime.UtcNow < deadline)
         {
-            var ended = await WaitUntilCompletedAsync(endedSignal.Task, remaining, cancellationToken);
-            if (!ended)
-                Log($"警告: 回放 '{sourceName}' 在预期时长内未收到结束事件，按已播放完处理");
+            var status = await GetMediaStatusAsync(sourceName);
+            if (IsPlaybackFinished(status))
+            {
+                Log($"回放 '{sourceName}' 已播放完成");
+                return true;
+            }
+            await Task.Delay(TimeSpan.FromMilliseconds(200), cancellationToken);
         }
 
+        Log($"警告: 回放 '{sourceName}' 在预期时长内未检测到播放结束，按已播放完处理");
         return true;
+    }
+
+    /// <summary>判断媒体源是否已播放完毕（状态为 ENDED，或播放进度已达到总时长）。</summary>
+    private static bool IsPlaybackFinished(ObsMediaStatusInfo? status)
+    {
+        if (status is null)
+            return false;
+
+        if (string.Equals(status.State, "OBS_MEDIA_STATE_ENDED", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (status.DurationMs is { } duration && duration > 0
+            && status.CursorMs is { } cursor && cursor >= duration)
+            return true;
+
+        return false;
     }
 
     public Task<bool> InputExistsAsync(string sourceName) =>
@@ -335,20 +348,6 @@ public class ObsService : IObsService, IDisposable
 
     public Task SetInputSettingsAsync(string inputName, Newtonsoft.Json.Linq.JObject settings, bool overlay = true) =>
         Task.Run(() => _obs.SetInputSettings(inputName, settings, overlay));
-
-    private static Task<bool> WaitUntilCompletedAsync(Task signalTask, TimeSpan timeout,
-        CancellationToken cancellationToken)
-    {
-        var delay = Task.Delay(timeout, cancellationToken);
-        var completed = Task.WhenAny(signalTask, delay);
-        return completed == signalTask ? Task.FromResult(true) : Task.FromResult(false);
-    }
-
-    private void OnMediaInputPlaybackEnded(object? sender, MediaInputPlaybackEndedEventArgs e)
-    {
-        if (_playbackEndedSignals.TryGetValue(e.InputName, out var signal))
-            signal.TrySetResult(true);
-    }
 
     private bool InputExists(string sourceName)
     {
@@ -450,7 +449,6 @@ public class ObsService : IObsService, IDisposable
         {
             _obs.Connected -= OnObsConnected;
             _obs.Disconnected -= OnObsDisconnected;
-            _obs.MediaInputPlaybackEnded -= OnMediaInputPlaybackEnded;
 
             if (_obs.IsConnected)
                 _obs.Disconnect();
