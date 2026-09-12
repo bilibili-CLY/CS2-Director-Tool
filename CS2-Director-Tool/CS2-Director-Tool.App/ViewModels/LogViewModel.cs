@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using CS2_Director_Tool.App.Models;
 using CS2_Director_Tool.App.Services;
@@ -10,7 +13,8 @@ using CS2_Director_Tool.App.Services;
 namespace CS2_Director_Tool.App.ViewModels;
 
 /// <summary>
-/// 日志页视图模型，集中展示并支持按类别、时间范围与内容筛选全应用日志。
+/// 日志页视图模型，集中展示并支持按类别、时间范围与内容筛选全应用日志，
+/// 并提供日志文件的位置调整、打开与清空操作。
 /// </summary>
 public partial class LogViewModel : ViewModelBase
 {
@@ -22,10 +26,12 @@ public partial class LogViewModel : ViewModelBase
     private string _startTimeText = string.Empty;
     private string _endTimeText = string.Empty;
     private string _searchText = string.Empty;
+    private string _logDirectory;
 
     public LogViewModel(ILogService log)
     {
         _log = log;
+        _logDirectory = log.LogDirectory;
 
         var options = new List<string> { AllCategory };
         options.AddRange(LogCategory.All);
@@ -37,7 +43,13 @@ public partial class LogViewModel : ViewModelBase
             Entries.Clear();
         });
 
+        ChangeLogDirectoryCommand = new AsyncRelayCommand(ChangeLogDirectoryAsync);
+        OpenLogFileCommand = new RelayCommand(OpenLogFile);
+        OpenLogFolderCommand = new RelayCommand(OpenLogFolder);
+        ClearLogFileCommand = new RelayCommand(ClearLogFile);
+
         _log.EntryAdded += OnEntryAdded;
+        _log.LogFileChanged += OnLogFileChanged;
         ApplyFilter();
     }
 
@@ -87,10 +99,99 @@ public partial class LogViewModel : ViewModelBase
         }
     }
 
+    /// <summary>当前日志文件完整路径。</summary>
+    public string LogFilePath => _log.LogFilePath;
+
+    /// <summary>日志存储目录（双向绑定，可由用户直接编辑或通过文件夹选择器修改）。</summary>
+    public string LogDirectory
+    {
+        get => _logDirectory;
+        set
+        {
+            var newValue = value?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(newValue))
+                return;
+            if (SetProperty(ref _logDirectory, newValue))
+                _log.LogDirectory = newValue;
+        }
+    }
+
+    /// <summary>由视图代码后置注入的文件夹选择器。</summary>
+    public Func<Task<string?>>? FolderPicker { get; set; }
+
     /// <summary>当前过滤后的日志条目。</summary>
     public ObservableCollection<LogEntry> Entries { get; } = new();
 
     public IRelayCommand ClearCommand { get; }
+    public IAsyncRelayCommand ChangeLogDirectoryCommand { get; }
+    public IRelayCommand OpenLogFileCommand { get; }
+    public IRelayCommand OpenLogFolderCommand { get; }
+    public IRelayCommand ClearLogFileCommand { get; }
+
+    private async Task ChangeLogDirectoryAsync()
+    {
+        var picker = FolderPicker;
+        if (picker is null)
+            return;
+
+        var folder = await picker();
+        if (string.IsNullOrEmpty(folder))
+            return;
+
+        LogDirectory = folder;
+        _log.Log(LogCategory.App, $"日志存储目录已调整为: {_log.LogDirectory}");
+    }
+
+    private void OpenLogFile()
+    {
+        var path = _log.LogFilePath;
+        if (!File.Exists(path))
+        {
+            _log.Log(LogCategory.App, $"日志文件不存在: {path}");
+            return;
+        }
+
+        OpenWithSystem(path);
+        _log.Log(LogCategory.App, $"已打开日志文件: {path}");
+    }
+
+    private void OpenLogFolder()
+    {
+        var folder = _log.LogDirectory;
+        if (!Directory.Exists(folder))
+            Directory.CreateDirectory(folder);
+
+        OpenWithSystem(folder);
+        _log.Log(LogCategory.App, $"已打开日志目录: {folder}");
+    }
+
+    private void ClearLogFile()
+    {
+        _log.ClearFile();
+        _log.Log(LogCategory.App, "已清空日志文件");
+    }
+
+    private void OnLogFileChanged(object? sender, EventArgs e)
+    {
+        LogDirectory = _log.LogDirectory;
+        OnPropertyChanged(nameof(LogFilePath));
+    }
+
+    private static void OpenWithSystem(string path)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"打开路径失败: {ex.Message}");
+        }
+    }
 
     private void OnEntryAdded(object? sender, LogEntry entry)
     {

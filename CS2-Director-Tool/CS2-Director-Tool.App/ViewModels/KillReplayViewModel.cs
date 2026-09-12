@@ -10,7 +10,7 @@ namespace CS2_Director_Tool.App.ViewModels;
 
 /// <summary>
 /// 击杀回放页面视图模型，管理场景配置与回放流程。
-/// 由 MajoCupDirector 项目的 <c>KillReplayViewModel</c> 复刻而来：
+/// 由 CSDirectorTool 项目的 <c>KillReplayViewModel</c> 复刻而来：
 /// 直接订阅 GSI / OBS / FFmpeg 事件驱动整个回放流程。
 /// </summary>
 public class KillReplayViewModel : ViewModelBase

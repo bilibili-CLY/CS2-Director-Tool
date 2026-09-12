@@ -31,8 +31,14 @@ public interface ISettingsService
     /// <summary>获取或设置玩家改名 API 的基础地址（可配置）。</summary>
     string PlayerApiBaseUrl { get; set; }
 
+    /// <summary>获取或设置比赛信息页面图片（战队 LOGO / 队员头像）的本地保存目录。</summary>
+    string MatchAssetsOutputPath { get; set; }
+
     /// <summary>获取或设置回放输出目录。</summary>
     string ReplayOutputPath { get; set; }
+
+    /// <summary>获取或设置日志存储目录。</summary>
+    string LogDirectory { get; set; }
 
     /// <summary>从持久化存储加载设置。</summary>
     void Load();

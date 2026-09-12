@@ -25,16 +25,20 @@ public class SettingsService : ISettingsService
     private bool _eventActionEnabled;
     private List<Models.EventActionRule> _eventActionRules = new();
     private List<Models.EventActionPreset> _eventActionPresets = new();
-    private string _playerApiBaseUrl = "https://majo-cup.laffeynyaa.com";
+    private string _playerApiBaseUrl = "https://www.yuzibei.cn";
+    private string _matchAssetsOutputPath = string.Empty;
     private string _replayOutputPath = string.Empty;
+    private string _logDirectory = string.Empty;
 
     public SettingsService()
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var directory = Path.Combine(appData, "MajoCupDirector");
+        var directory = Path.Combine(appData, "CSDirectorTool");
         _settingsFilePath = Path.Combine(directory, "settings.json");
 
         _replayOutputPath = Path.Combine(Path.GetTempPath(), "CSDirectorTool");
+        _logDirectory = Path.Combine(directory, "logs");
+        _matchAssetsOutputPath = Path.Combine(directory, "assets");
 
         Load();
     }
@@ -117,10 +121,22 @@ public class SettingsService : ISettingsService
         set { _playerApiBaseUrl = value ?? string.Empty; Save(); }
     }
 
+    public string MatchAssetsOutputPath
+    {
+        get => _matchAssetsOutputPath;
+        set { _matchAssetsOutputPath = value ?? string.Empty; Save(); }
+    }
+
     public string ReplayOutputPath
     {
         get => _replayOutputPath;
         set { _replayOutputPath = value ?? string.Empty; Save(); }
+    }
+
+    public string LogDirectory
+    {
+        get => _logDirectory;
+        set { _logDirectory = value ?? string.Empty; Save(); }
     }
 
     public void Load()
@@ -149,9 +165,16 @@ public class SettingsService : ISettingsService
             _eventActionRules = data.EventActionRules ?? new();
             _eventActionPresets = data.EventActionPresets ?? new();
             _playerApiBaseUrl = string.IsNullOrWhiteSpace(data.PlayerApiBaseUrl)
-                ? "https://majo-cup.laffeynyaa.com"
+                ? "https://www.yuzibei.cn"
                 : data.PlayerApiBaseUrl;
+            _matchAssetsOutputPath = string.IsNullOrWhiteSpace(data.MatchAssetsOutputPath)
+                ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CSDirectorTool", "assets")
+                : data.MatchAssetsOutputPath;
             _replayOutputPath = data.ReplayOutputPath ?? Path.Combine(Path.GetTempPath(), "CSDirectorTool");
+            if (string.IsNullOrWhiteSpace(data.LogDirectory))
+                _logDirectory = Path.Combine(Path.GetDirectoryName(_settingsFilePath) ?? Path.GetTempPath(), "logs");
+            else
+                _logDirectory = data.LogDirectory;
         }
         catch
         {
@@ -182,7 +205,9 @@ public class SettingsService : ISettingsService
                 EventActionRules = _eventActionRules,
                 EventActionPresets = _eventActionPresets,
                 PlayerApiBaseUrl = _playerApiBaseUrl,
-                ReplayOutputPath = _replayOutputPath
+                MatchAssetsOutputPath = _matchAssetsOutputPath,
+                ReplayOutputPath = _replayOutputPath,
+                LogDirectory = _logDirectory
             };
 
             var json = JsonConvert.SerializeObject(data, Formatting.Indented);
@@ -208,7 +233,9 @@ public class SettingsService : ISettingsService
         public bool EventActionEnabled { get; set; }
         public List<Models.EventActionRule> EventActionRules { get; set; } = new();
         public List<Models.EventActionPreset> EventActionPresets { get; set; } = new();
-        public string PlayerApiBaseUrl { get; set; } = "https://majo-cup.laffeynyaa.com";
+        public string PlayerApiBaseUrl { get; set; } = "https://www.yuzibei.cn";
+        public string MatchAssetsOutputPath { get; set; } = string.Empty;
         public string ReplayOutputPath { get; set; } = string.Empty;
+        public string LogDirectory { get; set; } = string.Empty;
     }
 }

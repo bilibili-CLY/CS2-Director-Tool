@@ -129,19 +129,37 @@ namespace CS2_Director_Tool.App.ViewModels
                 }
 
                 ClearLists();
-                int notFoundCount = 0;
-                int failureCount = 0;
 
-                var tasks = players.Select(player => ResolveRegisteredNameAsync(player));
-                var resolved = await Task.WhenAll(tasks);
+                var allSteamIds = players.Select(p => p.SteamId).Distinct().ToList();
+                IDictionary<string, string> registeredNames;
 
-                foreach (var item in resolved)
+                try
                 {
-                    var player = item.Player;
-                    if (item.Failed)
-                        failureCount++;
-                    else if (!player.IsRegistered)
-                        notFoundCount++;
+                    registeredNames = await _playerApiService.GetRegisteredNamesAsync(allSteamIds);
+                    _log.Log(LogCategory.PlayerRename, $"批量查询完成，返回 {registeredNames.Count} 条已登记记录");
+                }
+                catch (Exception ex)
+                {
+                    _log.Log(LogCategory.PlayerRename, $"批量查询玩家登记名称失败: {ex.Message}");
+                    Status = $"查询玩家登记名称失败：{ex.Message}";
+                    return;
+                }
+
+                int registeredCount = 0;
+
+                foreach (var player in players)
+                {
+                    if (registeredNames.TryGetValue(player.SteamId, out var name))
+                    {
+                        player.IsRegistered = true;
+                        player.RegisteredName = name;
+                        registeredCount++;
+                    }
+                    else
+                    {
+                        player.IsRegistered = false;
+                        player.RegisteredName = string.Empty;
+                    }
 
                     switch (player.Team)
                     {
@@ -163,32 +181,12 @@ namespace CS2_Director_Tool.App.ViewModels
                 CommandText = string.Empty;
                 Status = $"共发现 {players.Count} 名玩家：T {TTeamPlayers.Count} 名、CT {CTTeamPlayers.Count} 名"
                          + (HasNoTeam ? $"，未知队伍 {NoTeamPlayers.Count} 名" : string.Empty)
-                         + $"（未登记 {notFoundCount}，失败 {failureCount}）。点击“生成改名命令”生成命令。";
-                _log.Log(LogCategory.PlayerRename, $"发现玩家完成：共 {players.Count}（T {TTeamPlayers.Count}，CT {CTTeamPlayers.Count}，未知 {NoTeamPlayers.Count}，未登记 {notFoundCount}，失败 {failureCount}）");
+                         + $"（已登记 {registeredCount}，未登记 {players.Count - registeredCount}）。点击\"生成改名命令\"生成命令。";
+                _log.Log(LogCategory.PlayerRename, $"发现玩家完成：共 {players.Count}（T {TTeamPlayers.Count}，CT {CTTeamPlayers.Count}，未知 {NoTeamPlayers.Count}，已登记 {registeredCount}）");
             }
             finally
             {
                 IsBusy = false;
-            }
-        }
-
-        private async Task<(GsiPlayerInfo Player, bool Failed)> ResolveRegisteredNameAsync(GsiPlayerInfo player)
-        {
-            try
-            {
-                string? registeredName = await _playerApiService.GetRegisteredNameAsync(player.SteamId);
-                player.IsRegistered = !string.IsNullOrEmpty(registeredName);
-                player.RegisteredName = player.IsRegistered ? registeredName! : string.Empty;
-                if (!player.IsRegistered)
-                    _log.Log(LogCategory.PlayerRename, $"玩家 {player.SteamId} 未登记名称");
-                return (player, false);
-            }
-            catch (Exception ex)
-            {
-                player.IsRegistered = false;
-                player.RegisteredName = string.Empty;
-                _log.Log(LogCategory.PlayerRename, $"解析玩家 {player.SteamId} 登记名称失败: {ex.Message}");
-                return (player, true);
             }
         }
 
@@ -197,7 +195,6 @@ namespace CS2_Director_Tool.App.ViewModels
             var commands = new List<string>();
             int successCount = 0;
             int notFoundCount = 0;
-            int failureCount = 0;
 
             foreach (var player in TTeamPlayers.Concat(CTTeamPlayers).Concat(NoTeamPlayers))
             {
@@ -215,9 +212,9 @@ namespace CS2_Director_Tool.App.ViewModels
             CommandText = string.Join(";", commands);
             HasCommands = commands.Count > 0;
 
-            string summary = $"（成功 {successCount}，未登记 {notFoundCount}，失败 {failureCount}）";
+            string summary = $"（成功 {successCount}，未登记 {notFoundCount}）";
             Status = commands.Count > 0
-                ? "改名命令已生成，请点击“复制命令”复制到剪贴板后提交到游戏内控制台。" + summary
+                ? "改名命令已生成，请点击\"复制命令\"复制到剪贴板后提交到游戏内控制台。" + summary
                 : "未能生成任何改名命令，请先确认存在已登记名称的玩家。" + summary;
             _log.Log(LogCategory.PlayerRename, $"已生成改名命令{summary}");
         }

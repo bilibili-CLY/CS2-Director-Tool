@@ -1,17 +1,29 @@
 ﻿using Avalonia;
 using System;
+using System.Threading.Tasks;
+using CS2_Director_Tool.App.Services;
 
 namespace CS2_Director_Tool.App;
 
 sealed class Program
 {
-    // 初始化代码。在调用 AppMain 之前，不要使用任何 Avalonia、第三方 API 或依赖
-    // SynchronizationContext 的代码：此时一切都尚未初始化，可能会引发问题。
     [STAThread]
-    public static void Main(string[] args) => BuildAvaloniaApp()
-        .StartWithClassicDesktopLifetime(args);
+    public static void Main(string[] args)
+    {
+        AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
-    // Avalonia 配置，请勿移除；可视化设计器也会使用此方法。
+        try
+        {
+            BuildAvaloniaApp()
+                .StartWithClassicDesktopLifetime(args);
+        }
+        catch (Exception ex)
+        {
+            CrashLogWriter.Write("启动异常", ex);
+        }
+    }
+
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
@@ -20,4 +32,16 @@ sealed class Program
 #endif
             .WithInterFont()
             .LogToTrace();
+
+    private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception ex)
+            CrashLogWriter.Write("未处理异常", ex);
+    }
+
+    private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        CrashLogWriter.Write("未观察的 Task 异常", e.Exception);
+        e.SetObserved();
+    }
 }

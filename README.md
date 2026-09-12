@@ -108,7 +108,7 @@ CS2 Director Tool 本地状态判断（比赛 / 回合 / 暂停 / 击杀 / 炸�
 5. 所有命令用分号连接后自动复制到剪贴板。
 6. 在 HLAE 启动的 CS2 控制台粘贴执行即可替换 HUD 显示名称。
 
-> API BaseUrl 可通过 `settings.json` 中的 `PlayerApiBaseUrl` 字段自定义（默认 `https://majo-cup.laffeynyaa.com`）。
+> API BaseUrl 可通过 `settings.json` 中的 `PlayerApiBaseUrl` 字段自定义（默认 `https://www.yuzibei.cn`）。
 
 ---
 

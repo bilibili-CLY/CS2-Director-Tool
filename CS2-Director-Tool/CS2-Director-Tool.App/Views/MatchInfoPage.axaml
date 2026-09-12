@@ -1,0 +1,300 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:CS2_Director_Tool.App.ViewModels"
+             xmlns:m="using:CS2_Director_Tool.App.Models"
+             xmlns:conv="using:CS2_Director_Tool.App.Converters"
+             x:Class="CS2_Director_Tool.App.Views.MatchInfoPage"
+             x:DataType="vm:MatchInfoViewModel">
+
+    <UserControl.Resources>
+        <conv:NullToBoolConverter x:Key="NotNull" />
+        <conv:NullToBoolConverter x:Key="IsNull" Invert="True" />
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Border.avatar-frame">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="Background" Value="#1E1E1E" />
+            <Setter Property="BorderBrush" Value="#3D3D3D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+        <Style Selector="TextBlock.avatar-placeholder">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.team-logo">
+            <Setter Property="Width" Value="64" />
+            <Setter Property="Height" Value="64" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Background" Value="#1E1E1E" />
+            <Setter Property="BorderBrush" Value="#3D3D3D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+        <Style Selector="TextBlock.logo-placeholder">
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.team-name">
+            <Setter Property="FontSize" Value="19" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style Selector="TextBlock.team-side">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,4,0,0" />
+        </Style>
+        <Style Selector="Border.vs-badge">
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="CornerRadius" Value="22" />
+            <Setter Property="Background" Value="#2A2A2A" />
+            <Setter Property="BorderBrush" Value="#3D3D3D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.vs-text">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.member-row">
+            <Setter Property="Background" Value="#161616" />
+            <Setter Property="BorderBrush" Value="#262626" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+        <Style Selector="TextBlock.member-name">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style Selector="TextBlock.captain-star">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.role-badge">
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Background" Value="#2A2A2A" />
+            <Setter Property="Padding" Value="6,1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.role-text">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,28" Spacing="16">
+
+            <TextBlock Text="比赛信息" Classes="page-title" />
+            <TextBlock Text="粘贴对阵图页面的对局 ID，获取对阵双方名单、图片与改名命令" Classes="page-subtitle" />
+
+            <!-- 查询区 -->
+            <Border Classes="card">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <TextBlock Grid.Column="0" Text="对局 ID:" Classes="label-text" />
+                        <TextBox Grid.Column="1" Text="{Binding GameId}" Classes="input"
+                                 Watermark="例如 3d1a1c86-9c38-4d1e-8e2f-5e5f8456a1c0" />
+                        <Button Grid.Column="2" Content="获取" Command="{Binding FetchCommand}"
+                                Classes="btn btn-primary" />
+                    </Grid>
+                    <TextBlock Text="{Binding Status}" Classes="caption-text" />
+                </StackPanel>
+            </Border>
+
+            <!-- 计分板 -->
+            <Border Classes="card" IsVisible="{Binding HasResult}">
+                <StackPanel Spacing="16">
+                    <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="16">
+
+                        <!-- A 方 -->
+                        <Border Grid.Column="0" CornerRadius="10" Background="#161616"
+                                BorderBrush="#262626" BorderThickness="1" Padding="16,14"
+                                IsVisible="{Binding TeamA, Converter={StaticResource NotNull}}">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="A 方" Classes="team-side" />
+                                <StackPanel Spacing="8" DataContext="{Binding TeamA}"
+                                            x:DataType="m:RosterTeam">
+                                    <Border Classes="team-logo">
+                                        <Grid>
+                                            <Image Source="{Binding LogoImage}" Stretch="Uniform" Margin="6" />
+                                            <TextBlock Text="{Binding LogoPlaceholderChar}"
+                                                       Classes="logo-placeholder"
+                                                       IsVisible="{Binding ShowLogoPlaceholder}" />
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="{Binding TeamName}" Classes="team-name" MaxWidth="240" />
+                                    <TextBlock Text="{Binding PerfectId}" Classes="label-text"
+                                               HorizontalAlignment="Center" FontSize="12" />
+                                    <ItemsControl ItemsSource="{Binding Members}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="m:RosterMember">
+                                                <Border Classes="member-row">
+                                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                                        <Border Grid.Column="0" Classes="avatar-frame">
+                                                            <Grid>
+                                                                <Image Source="{Binding AvatarImage}"
+                                                                       Stretch="UniformToFill" />
+                                                                <TextBlock Text="{Binding PlaceholderChar}"
+                                                                           Classes="avatar-placeholder"
+                                                                           IsVisible="{Binding ShowAvatarPlaceholder}" />
+                                                            </Grid>
+                                                        </Border>
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                <TextBlock Text="{Binding DisplayName}" Classes="member-name"
+                                                                           MaxWidth="180" />
+                                                                <TextBlock Text="★" Classes="captain-star"
+                                                                           IsVisible="{Binding IsCaptain}" />
+                                                                <Border Classes="role-badge">
+                                                                    <TextBlock Text="{Binding RoleLabel}" Classes="role-text" />
+                                                                </Border>
+                                                            </StackPanel>
+                                                            <TextBlock Text="{Binding SteamDisplay}" Classes="label-text"
+                                                                       FontSize="11" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="0" CornerRadius="10" Background="#161616"
+                                BorderBrush="#262626" BorderThickness="1" Padding="16,14"
+                                IsVisible="{Binding TeamA, Converter={StaticResource IsNull}}">
+                            <TextBlock Text="A 方待定" Classes="label-text" HorizontalAlignment="Center"
+                                       Margin="0,38" />
+                        </Border>
+
+                        <!-- VS -->
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0">
+                            <Border Classes="vs-badge">
+                                <TextBlock Text="VS" Classes="vs-text" />
+                            </Border>
+                        </StackPanel>
+
+                        <!-- B 方 -->
+                        <Border Grid.Column="2" CornerRadius="10" Background="#161616"
+                                BorderBrush="#262626" BorderThickness="1" Padding="16,14"
+                                IsVisible="{Binding TeamB, Converter={StaticResource NotNull}}">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="B 方" Classes="team-side" />
+                                <StackPanel Spacing="8" DataContext="{Binding TeamB}"
+                                            x:DataType="m:RosterTeam">
+                                    <Border Classes="team-logo">
+                                        <Grid>
+                                            <Image Source="{Binding LogoImage}" Stretch="Uniform" Margin="6" />
+                                            <TextBlock Text="{Binding LogoPlaceholderChar}" Classes="logo-placeholder"
+                                                       IsVisible="{Binding ShowLogoPlaceholder}" />
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Text="{Binding TeamName}" Classes="team-name" MaxWidth="240" />
+                                    <TextBlock Text="{Binding PerfectId}" Classes="label-text"
+                                               HorizontalAlignment="Center" FontSize="12" />
+                                    <ItemsControl ItemsSource="{Binding Members}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="m:RosterMember">
+                                                <Border Classes="member-row">
+                                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                                        <Border Grid.Column="0" Classes="avatar-frame">
+                                                            <Grid>
+                                                                <Image Source="{Binding AvatarImage}" Stretch="UniformToFill" />
+                                                                <TextBlock Text="{Binding PlaceholderChar}"
+                                                                           Classes="avatar-placeholder"
+                                                                           IsVisible="{Binding ShowAvatarPlaceholder}" />
+                                                            </Grid>
+                                                        </Border>
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                <TextBlock Text="{Binding DisplayName}" Classes="member-name"
+                                                                           MaxWidth="180" />
+                                                                <TextBlock Text="★" Classes="captain-star"
+                                                                           IsVisible="{Binding IsCaptain}" />
+                                                                <Border Classes="role-badge">
+                                                                    <TextBlock Text="{Binding RoleLabel}" Classes="role-text" />
+                                                                </Border>
+                                                            </StackPanel>
+                                                            <TextBlock Text="{Binding SteamDisplay}" Classes="label-text"
+                                                                       FontSize="11" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="2" CornerRadius="10" Background="#161616"
+                                BorderBrush="#262626" BorderThickness="1" Padding="16,14"
+                                IsVisible="{Binding TeamB, Converter={StaticResource IsNull}}">
+                            <TextBlock Text="B 方待定" Classes="label-text" HorizontalAlignment="Center"
+                                       Margin="0,38" />
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- 图片与命令区 -->
+            <Border Classes="card" IsVisible="{Binding HasResult}">
+                <StackPanel Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+                        <TextBox Grid.Column="0" Text="{Binding DownloadDirectory}" Classes="input"
+                                 Watermark="图片保存目录" />
+                        <Button Grid.Column="1" Content="浏览" Command="{Binding BrowseDownloadFolderCommand}"
+                                Classes="btn" />
+                        <Button Grid.Column="2" Content="下载全部图片" Command="{Binding DownloadImagesCommand}"
+                                Classes="btn" />
+                        <Button Grid.Column="3" Content="打开目录" Command="{Binding OpenDownloadFolderCommand}"
+                                Classes="btn" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                        <TextBlock Grid.Column="0" Text="改名命令" Classes="section-title"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Content="生成改名命令" Command="{Binding GenerateRenameCommand}"
+                                Classes="btn" />
+                        <Button Grid.Column="2" Content="复制命令" Command="{Binding CopyCommand}"
+                                Classes="btn btn-primary" />
+                    </Grid>
+
+                    <TextBox Text="{Binding CommandText}" IsVisible="{Binding HasCommands}"
+                             TextWrapping="Wrap" AcceptsReturn="True" IsReadOnly="True"
+                             FontFamily="Consolas, Menlo, monospace" FontSize="12"
+                             MinHeight="120" MaxHeight="260"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto" Classes="input" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
