@@ -12,16 +12,16 @@ namespace CS2_Director_Tool.App.Services;
 /// <summary>
 /// 从赛事网站 API 批量解析玩家的登记名称。API 基础地址由设置提供，便于复用为通用 CS2 导播工具。
 /// </summary>
-public class MajoCupPlayerApiService : IPlayerApiService, IDisposable
+public class CSDirectorToolPlayerApiService : IPlayerApiService, IDisposable
 {
     private const int TimeoutSeconds = 10;
 
     private readonly HttpClient _httpClient;
     private readonly string _baseUrl;
 
-    /// <summary>初始化 <see cref="MajoCupPlayerApiService"/> 类的新实例。</summary>
+    /// <summary>初始化 <see cref="CSDirectorToolPlayerApiService"/> 类的新实例。</summary>
     /// <param name="baseUrl">API 基础地址，例如 https://www.yuzibei.cn</param>
-    public MajoCupPlayerApiService(string baseUrl)
+    public CSDirectorToolPlayerApiService(string baseUrl)
     {
         _baseUrl = baseUrl.TrimEnd('/');
         _httpClient = new HttpClient

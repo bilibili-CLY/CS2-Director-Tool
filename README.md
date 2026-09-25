@@ -56,9 +56,9 @@ CS2 Director Tool 本地状态判断（比赛 / 回合 / 暂停 / 击杀 / 炸�
 | `FfmpegService` | 按时间戳对 OBS 录制文件做帧精确截取（`-ss` 在 `-i` 前，重编码 `libx264 veryfast`），并使用 concat demuxer 拼接最终回放。 |
 | `ReplayWorkflowService` | 击杀回放工作流：回合开始切换游戏场景并录制 → 记录击杀时间点 → 回合结束 FFmpeg 剪辑拼接 → OBS 播放回放 → 恢复录制。 |
 | `EventActionService` | 订阅 GSI 事件，匹配用户规则后顺序执行 `PlayMedia / StopMedia / SwitchScene / StartReplayRecording / RecordKillPoint / GenerateReplay`。 |
-| `MajoCupPlayerApiService` | 按 Steam64 ID 查询赛事登记名（BaseUrl 可配置，默认沿用魔女杯 API）。 |
-| `Cs2InstallService` | 解析 CS2 安装目录下的 `csgo/cfg`，安装 / 检查 `gamestate_integration_majo_cup.cfg`。 |
-| `SettingsService` | 持久化所有配置为 JSON（跨平台路径：`%APPDATA%/CS2-Director-Tool/settings.json` 或对应平台目录）。 |
+| `CSDirectorToolPlayerApiService` | 按 Steam64 ID 查询赛事登记名（BaseUrl 可配置）。 |
+| `Cs2InstallService` | 解析 CS2 安装目录下的 `csgo/cfg`，安装 / 检查 `gamestate_integration_yuzi_cup.cfg`。 |
+| `SettingsService` | 持久化所有配置为 JSON（跨平台路径：`%APPDATA%/CSDirectorTool/settings.json` 或对应平台目录）。 |
 | `LogService` | 集中日志基础设施，支持分类别记录，被各页面与服务复用。 |
 
 ---

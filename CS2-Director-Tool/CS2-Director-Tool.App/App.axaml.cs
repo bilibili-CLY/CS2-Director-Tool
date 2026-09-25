@@ -161,7 +161,7 @@ public partial class App : Application
         services.AddSingleton<IReplayWorkflowService, ReplayWorkflowService>();
         services.AddSingleton<IFfmpegService, FfmpegService>();
         services.AddSingleton<IPlayerApiService>(sp =>
-            new MajoCupPlayerApiService(sp.GetRequiredService<ISettingsService>().PlayerApiBaseUrl));
+            new CSDirectorToolPlayerApiService(sp.GetRequiredService<ISettingsService>().PlayerApiBaseUrl));
         services.AddSingleton<IGameRosterApiService>(sp =>
             new GameRosterApiService(sp.GetRequiredService<ISettingsService>().PlayerApiBaseUrl));
         services.AddSingleton<IImageDownloadService>(sp =>
